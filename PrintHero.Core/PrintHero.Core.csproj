@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+		<WarningsAsErrors />		
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Interfaces\ILicensingService.cs" />
+	  <Compile Remove="Services\LicensingService.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Data\" />
+		<Folder Include="Interfaces\" />
+		<Folder Include="Models\" />
+		<Folder Include="Services\" />
+		<Folder Include="Utilities\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.5" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.5" />
+		<PackageReference Include="PDFsharp" Version="6.0.0" />
+		<PackageReference Include="Serilog" Version="4.3.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+		<PackageReference Include="System.Drawing.Common" Version="9.0.5" />
+		<PackageReference Include="System.Management" Version="9.0.5" />
+		<PackageReference Include="System.Text.Json" Version="9.0.5" />
+	</ItemGroup>
+
+
+</Project>

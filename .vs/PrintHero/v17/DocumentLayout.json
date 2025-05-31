@@ -1,0 +1,370 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Projects\\PrintHero\\PrintHero\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|c:\\projects\\printhero\\printhero\\printhero.ui\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.ui\\views\\foldersettingswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\views\\foldersettingswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.ui\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\app.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{42493406-9B6B-423C-A108-9D47B7C78964}|PrintHero.Core\\PrintHero.Core.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.core\\models\\monitoredfolder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{42493406-9B6B-423C-A108-9D47B7C78964}|PrintHero.Core\\PrintHero.Core.csproj|solutionrelative:printhero.core\\models\\monitoredfolder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.ui\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.ui\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.ui\\views\\foldersettingswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\views\\foldersettingswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.ui\\views\\printersettingswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\views\\printersettingswindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.ui\\views\\printersettingswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\views\\printersettingswindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.ui\\viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DD22BAE9-7C19-4311-8244-3392036899CD}|PrintHero.Service\\PrintHero.Service.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.service\\worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD22BAE9-7C19-4311-8244-3392036899CD}|PrintHero.Service\\PrintHero.Service.csproj|solutionrelative:printhero.service\\worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DD22BAE9-7C19-4311-8244-3392036899CD}|PrintHero.Service\\PrintHero.Service.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.service\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD22BAE9-7C19-4311-8244-3392036899CD}|PrintHero.Service\\PrintHero.Service.csproj|solutionrelative:printhero.service\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.ui\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\obj\\Debug\\net8.0-windows\\MainWindow.g.i.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:PrintHero.UI\\obj\\Debug\\net8.0-windows\\MainWindow.g.i.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DD22BAE9-7C19-4311-8244-3392036899CD}|PrintHero.Service\\PrintHero.Service.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.service\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{DD22BAE9-7C19-4311-8244-3392036899CD}|PrintHero.Service\\PrintHero.Service.csproj|solutionrelative:printhero.service\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\HP\\AppData\\Local\\Temp\\.vsdbgsrc\\6aa8dfe6dce7647690db27e2d44efd3bdfeed3cfaad2ff4a1195b1c962d31917\\XamlReader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.ui\\printhero.ui.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\printhero.ui.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DD22BAE9-7C19-4311-8244-3392036899CD}|PrintHero.Service\\PrintHero.Service.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.service\\printhero.service.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{DD22BAE9-7C19-4311-8244-3392036899CD}|PrintHero.Service\\PrintHero.Service.csproj|solutionrelative:printhero.service\\printhero.service.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\dotnet\\sdk\\8.0.408\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{42493406-9B6B-423C-A108-9D47B7C78964}|PrintHero.Core\\PrintHero.Core.csproj|C:\\Projects\\PrintHero\\PrintHero\\printhero.core\\printhero.core.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{42493406-9B6B-423C-A108-9D47B7C78964}|PrintHero.Core\\PrintHero.Core.csproj|solutionrelative:printhero.core\\printhero.core.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Services\\LicensingService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:PrintHero.Core\\Services\\LicensingService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{65ddf8c3-8f89-4077-a6c6-dbb8853aab13}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "FolderSettingsWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\Views\\FolderSettingsWindow.xaml.cs",
+              "RelativeDocumentMoniker": "PrintHero.UI\\Views\\FolderSettingsWindow.xaml.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\Views\\FolderSettingsWindow.xaml.cs",
+              "RelativeToolTip": "PrintHero.UI\\Views\\FolderSettingsWindow.xaml.cs",
+              "ViewState": "AQIAAGUAAAAAAAAAAAAAAEIAAAAIAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-29T09:04:07.184Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "PrinterSettingsWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\Views\\PrinterSettingsWindow.xaml.cs",
+              "RelativeDocumentMoniker": "PrintHero.UI\\Views\\PrinterSettingsWindow.xaml.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\Views\\PrinterSettingsWindow.xaml.cs",
+              "RelativeToolTip": "PrintHero.UI\\Views\\PrinterSettingsWindow.xaml.cs",
+              "ViewState": "AQIAAAcAAAAAAAAAAAAAAPQAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-29T08:29:48.751Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "FolderSettingsWindow.xaml",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\Views\\FolderSettingsWindow.xaml",
+              "RelativeDocumentMoniker": "PrintHero.UI\\Views\\FolderSettingsWindow.xaml",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\Views\\FolderSettingsWindow.xaml",
+              "RelativeToolTip": "PrintHero.UI\\Views\\FolderSettingsWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-05-29T09:04:00.974Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "App.xaml.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\App.xaml.cs",
+              "RelativeDocumentMoniker": "PrintHero.UI\\App.xaml.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\App.xaml.cs",
+              "RelativeToolTip": "PrintHero.UI\\App.xaml.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAA4AAAAEAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-29T08:27:25.749Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "MonitoredFolder.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Models\\MonitoredFolder.cs",
+              "RelativeDocumentMoniker": "PrintHero.Core\\Models\\MonitoredFolder.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Models\\MonitoredFolder.cs",
+              "RelativeToolTip": "PrintHero.Core\\Models\\MonitoredFolder.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAUAAAA6AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-30T09:54:11.5Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "App.xaml",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\App.xaml",
+              "RelativeDocumentMoniker": "PrintHero.UI\\App.xaml",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\App.xaml",
+              "RelativeToolTip": "PrintHero.UI\\App.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-05-29T10:19:29.595Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "PrinterSettingsWindow.xaml",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\Views\\PrinterSettingsWindow.xaml",
+              "RelativeDocumentMoniker": "PrintHero.UI\\Views\\PrinterSettingsWindow.xaml",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\Views\\PrinterSettingsWindow.xaml",
+              "RelativeToolTip": "PrintHero.UI\\Views\\PrinterSettingsWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-05-29T08:28:03.438Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "PrintHero.UI\\MainWindow.xaml.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\MainWindow.xaml.cs",
+              "RelativeToolTip": "PrintHero.UI\\MainWindow.xaml.cs",
+              "ViewState": "AQIAAKgAAAAAAAAAAAAwwKkAAAAmAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-29T08:58:57.77Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "AssemblyInfo.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\AssemblyInfo.cs",
+              "RelativeDocumentMoniker": "PrintHero.UI\\AssemblyInfo.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\AssemblyInfo.cs",
+              "RelativeToolTip": "PrintHero.UI\\AssemblyInfo.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-30T09:43:25.261Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "MainViewModel.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\ViewModels\\MainViewModel.cs",
+              "RelativeDocumentMoniker": "PrintHero.UI\\ViewModels\\MainViewModel.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\ViewModels\\MainViewModel.cs",
+              "RelativeToolTip": "PrintHero.UI\\ViewModels\\MainViewModel.cs",
+              "ViewState": "AQIAAGIAAAAAAAAAAAAmwBoAAAAbAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-29T08:32:25.939Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Worker.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\Worker.cs",
+              "RelativeDocumentMoniker": "PrintHero.Service\\Worker.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\Worker.cs",
+              "RelativeToolTip": "PrintHero.Service\\Worker.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-30T09:57:39.72Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\Program.cs",
+              "RelativeDocumentMoniker": "PrintHero.Service\\Program.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\Program.cs",
+              "RelativeToolTip": "PrintHero.Service\\Program.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-29T10:03:07.239Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "PrintHero.UI\\MainWindow.xaml",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\MainWindow.xaml",
+              "RelativeToolTip": "PrintHero.UI\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-05-29T09:44:32.614Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "MainWindow.g.i.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\obj\\Debug\\net8.0-windows\\MainWindow.g.i.cs",
+              "RelativeDocumentMoniker": "PrintHero.UI\\obj\\Debug\\net8.0-windows\\MainWindow.g.i.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\obj\\Debug\\net8.0-windows\\MainWindow.g.i.cs",
+              "RelativeToolTip": "PrintHero.UI\\obj\\Debug\\net8.0-windows\\MainWindow.g.i.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABEAAAAkAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-29T19:12:25.764Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\appsettings.json",
+              "RelativeDocumentMoniker": "PrintHero.Service\\appsettings.json",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\appsettings.json",
+              "RelativeToolTip": "PrintHero.Service\\appsettings.json",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-05-29T10:03:12.082Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "XamlReader.cs",
+              "DocumentMoniker": "C:\\Users\\HP\\AppData\\Local\\Temp\\.vsdbgsrc\\6aa8dfe6dce7647690db27e2d44efd3bdfeed3cfaad2ff4a1195b1c962d31917\\XamlReader.cs",
+              "RelativeDocumentMoniker": "..\\..\\..\\Users\\HP\\AppData\\Local\\Temp\\.vsdbgsrc\\6aa8dfe6dce7647690db27e2d44efd3bdfeed3cfaad2ff4a1195b1c962d31917\\XamlReader.cs",
+              "ToolTip": "C:\\Users\\HP\\AppData\\Local\\Temp\\.vsdbgsrc\\6aa8dfe6dce7647690db27e2d44efd3bdfeed3cfaad2ff4a1195b1c962d31917\\XamlReader.cs",
+              "RelativeToolTip": "..\\..\\..\\Users\\HP\\AppData\\Local\\Temp\\.vsdbgsrc\\6aa8dfe6dce7647690db27e2d44efd3bdfeed3cfaad2ff4a1195b1c962d31917\\XamlReader.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-29T10:17:18.031Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "LicensingService.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Services\\LicensingService.cs",
+              "RelativeDocumentMoniker": "PrintHero.Core\\Services\\LicensingService.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Services\\LicensingService.cs",
+              "RelativeToolTip": "PrintHero.Core\\Services\\LicensingService.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-29T09:59:27.228Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "PrintHero.Service.csproj",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\PrintHero.Service.csproj",
+              "RelativeDocumentMoniker": "PrintHero.Service\\PrintHero.Service.csproj",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\PrintHero.Service.csproj",
+              "RelativeToolTip": "PrintHero.Service\\PrintHero.Service.csproj",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAMAAAA0AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-05-29T08:53:49.077Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "Microsoft.Common.CurrentVersion.targets",
+              "DocumentMoniker": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "RelativeDocumentMoniker": "..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "ToolTip": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "RelativeToolTip": "..\\..\\..\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\amd64\\Microsoft.Common.CurrentVersion.targets",
+              "ViewState": "AQIAADUHAAAAAAAAAAAtwEoHAAAEAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
+              "WhenOpened": "2025-05-29T08:54:34.907Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "PrintHero.Core.csproj",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\PrintHero.Core.csproj",
+              "RelativeDocumentMoniker": "PrintHero.Core\\PrintHero.Core.csproj",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\PrintHero.Core.csproj",
+              "RelativeToolTip": "PrintHero.Core\\PrintHero.Core.csproj",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAQAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-05-29T08:37:44.261Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "PrintHero.UI.csproj",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\PrintHero.UI.csproj",
+              "RelativeDocumentMoniker": "PrintHero.UI\\PrintHero.UI.csproj",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\PrintHero.UI.csproj",
+              "RelativeToolTip": "PrintHero.UI\\PrintHero.UI.csproj",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAACIAAAANAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-05-29T08:35:02.707Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "Microsoft.NET.Sdk.DefaultItems.targets",
+              "DocumentMoniker": "C:\\Program Files\\dotnet\\sdk\\8.0.408\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.targets",
+              "RelativeDocumentMoniker": "..\\..\\..\\Program Files\\dotnet\\sdk\\8.0.408\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.targets",
+              "ToolTip": "C:\\Program Files\\dotnet\\sdk\\8.0.408\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.targets",
+              "RelativeToolTip": "..\\..\\..\\Program Files\\dotnet\\sdk\\8.0.408\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.DefaultItems.targets",
+              "ViewState": "AQIAAHcAAAAAAAAAAAAtwIwAAAAEAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
+              "WhenOpened": "2025-05-29T08:27:54.853Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

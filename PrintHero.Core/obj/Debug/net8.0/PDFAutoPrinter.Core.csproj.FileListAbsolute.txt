@@ -1,0 +1,12 @@
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\bin\Debug\net8.0\PDFAutoPrinter.Core.deps.json
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\bin\Debug\net8.0\PDFAutoPrinter.Core.dll
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\bin\Debug\net8.0\PDFAutoPrinter.Core.pdb
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\obj\Debug\net8.0\PDFAutoPrinter.Core.csproj.AssemblyReference.cache
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\obj\Debug\net8.0\PDFAutoPrinter.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\obj\Debug\net8.0\PDFAutoPrinter.Core.AssemblyInfoInputs.cache
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\obj\Debug\net8.0\PDFAutoPrinter.Core.AssemblyInfo.cs
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\obj\Debug\net8.0\PDFAutoPrinter.Core.csproj.CoreCompileInputs.cache
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\obj\Debug\net8.0\PDFAutoPrinter.Core.dll
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\obj\Debug\net8.0\refint\PDFAutoPrinter.Core.dll
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\obj\Debug\net8.0\PDFAutoPrinter.Core.pdb
+C:\Projects\PDFAutoPrinter\PDFAutoPrinter\PDFAutoPrinter.Core\obj\Debug\net8.0\ref\PDFAutoPrinter.Core.dll

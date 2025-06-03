@@ -12,11 +12,3 @@ public class MonitoredFolder
     public PostPrintAction PostPrintAction { get; set; } = PostPrintAction.MoveToSubfolder;
     public string? CustomMoveFolder { get; set; }
 }
-
-public enum PostPrintAction
-{
-    MoveToSubfolder,
-    MoveToCustomFolder,
-    DeleteFile,
-    KeepFile
-}

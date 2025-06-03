@@ -6,7 +6,7 @@ namespace PrintHero.UI.Views;
 
 public partial class FolderSettingsWindow : Window
 {
-    private readonly ILogger<FolderSettingsWindow>? _logger;
+    private readonly ILogger? _logger;
 
     public FolderSettingsWindow()
     {
@@ -15,7 +15,14 @@ public partial class FolderSettingsWindow : Window
         LoadCurrentSettings();
     }
 
-    public FolderSettingsWindow(ILogger<FolderSettingsWindow>? logger)
+    public FolderSettingsWindow(ILogger logger)
+    {
+        InitializeComponent();
+        _logger = logger;
+        LoadCurrentSettings();
+    }
+
+    public FolderSettingsWindow(ILogger<FolderSettingsWindow> logger)
     {
         InitializeComponent();
         _logger = logger;

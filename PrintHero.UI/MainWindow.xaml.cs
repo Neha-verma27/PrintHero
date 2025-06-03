@@ -12,6 +12,10 @@ public partial class MainWindow : Window
     private readonly MainViewModel _viewModel;
     private readonly ILogger<MainWindow> _logger;
 
+    public MainWindow() : this(null, null)
+    {
+    }
+
     public MainWindow(MainViewModel viewModel, ILogger<MainWindow> logger)
     {
         InitializeComponent();

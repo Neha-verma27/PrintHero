@@ -1,7 +1,36 @@
 using PrintHero.Service;
+using Serilog;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<Worker>();
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File(Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "PrintHero", "logs", "service-.log"),
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30)
+    .CreateLogger();
 
-var host = builder.Build();
-host.Run();
+try
+{
+    var builder = Host.CreateApplicationBuilder(args);
+
+    // Use Serilog
+    builder.Services.AddSerilog();
+
+    // Add the worker service
+    builder.Services.AddHostedService<Worker>();
+
+    var host = builder.Build();
+
+    Log.Information("Starting PrintHero Service");
+    await host.RunAsync();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "PrintHero Service terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

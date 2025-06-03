@@ -1,30 +1,310 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="PrintHero.Installer" Language="1033" Version="1.0.0.0" Manufacturer="HP" UpgradeCode="8d27e626-9ced-43fe-a3ff-037eac6066e3">
-		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+<!-- PrintHero.Installer/Product.wxs -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
-		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
-		<MediaTemplate />
+	<Product Id="*"
+			 Name="PrintHero"
+			 Language="1033"
+			 Version="1.0.0.0"
+			 Manufacturer="PrintHero Solutions"
+			 UpgradeCode="8d27e626-9ced-43fe-a3ff-037eac6066e3">
 
-		<Feature Id="ProductFeature" Title="PrintHero.Installer" Level="1">
-			<ComponentGroupRef Id="ProductComponents" />
+		<Package InstallerVersion="200"
+				 Compressed="yes"
+				 InstallScope="perMachine"
+				 Description="PrintHero - Automatic PDF Printing Service"
+				 Comments="Monitor folders and automatically print PDF files" />
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of PrintHero is already installed." />
+		<MediaTemplate EmbedCab="yes" />
+
+		<!-- Prerequisites -->
+		<PropertyRef Id="WIX_IS_NETFRAMEWORK_48_OR_LATER_INSTALLED"/>
+		<Condition Message="This application requires .NET Framework 4.8 or later.">
+			<![CDATA[Installed OR WIX_IS_NETFRAMEWORK_48_OR_LATER_INSTALLED]]>
+		</Condition>
+
+		<!-- Custom properties -->
+		<Property Id="ARPPRODUCTICON" Value="PrintHeroIcon.ico" />
+		<Property Id="ARPHELPLINK" Value="https://github.com/printhero/support" />
+		<Property Id="ARPURLINFOABOUT" Value="https://www.printhero.com" />
+		<Property Id="ARPNOREPAIR" Value="yes" Secure="yes" />
+
+		<!-- Launch condition for Windows version -->
+		<Condition Message="This application is only supported on Windows 10 or higher.">
+			<![CDATA[Installed OR (VersionNT >= 1000)]]>
+		</Condition>
+
+		<!-- Features -->
+		<Feature Id="MainApplication" Title="PrintHero Application" Level="1"
+				 Description="Core PrintHero application files"
+				 ConfigurableDirectory="INSTALLFOLDER">
+			<ComponentGroupRef Id="MainApplicationComponents" />
+			<ComponentGroupRef Id="DotNetRuntimeComponents" />
 		</Feature>
+
+		<Feature Id="WindowsService" Title="PrintHero Service" Level="1"
+				 Description="Background service for automatic PDF printing">
+			<ComponentGroupRef Id="ServiceComponents" />
+		</Feature>
+
+		<Feature Id="StartMenuShortcuts" Title="Start Menu Shortcuts" Level="1"
+				 Description="Add shortcuts to Start Menu">
+			<ComponentGroupRef Id="StartMenuComponents" />
+		</Feature>
+
+		<Feature Id="DesktopShortcut" Title="Desktop Shortcut" Level="1000"
+				 Description="Add shortcut to Desktop">
+			<ComponentGroupRef Id="DesktopComponents" />
+		</Feature>
+
+		<!-- UI -->
+		<UIRef Id="WixUI_FeatureTree" />
+		<UIRef Id="WixUI_ErrorProgressText" />
+
+		<!-- Custom UI modifications -->
+		<UI>
+			<Publish Dialog="ExitDialog"
+					 Control="Finish"
+					 Event="DoAction"
+					 Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+		</UI>
+
+		<Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch PrintHero" />
+		<Property Id="WixShellExecTarget" Value="[#PrintHeroUI.exe]" />
+		<CustomAction Id="LaunchApplication" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" />
+
+		<!-- License -->
+		<WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+		<!-- Icons -->
+		<Icon Id="PrintHeroIcon.ico" SourceFile="Resources\PrintHero.ico" />
 	</Product>
 
+	<!-- Directory Structure -->
 	<Fragment>
 		<Directory Id="TARGETDIR" Name="SourceDir">
-			<Directory Id="ProgramFilesFolder">
-				<Directory Id="INSTALLFOLDER" Name="PrintHero.Installer" />
+
+			<!-- Program Files -->
+			<Directory Id="ProgramFiles64Folder">
+				<Directory Id="INSTALLFOLDER" Name="PrintHero">
+					<Directory Id="LOGSDIR" Name="Logs" />
+					<Directory Id="DATADIR" Name="Data" />
+					<Directory Id="CONFIGDIR" Name="Config" />
+				</Directory>
 			</Directory>
+
+			<!-- Start Menu -->
+			<Directory Id="ProgramMenuFolder">
+				<Directory Id="ApplicationProgramsFolder" Name="PrintHero" />
+			</Directory>
+
+			<!-- Desktop -->
+			<Directory Id="DesktopFolder" Name="Desktop" />
+
+			<!-- Common App Data -->
+			<Directory Id="CommonAppDataFolder">
+				<Directory Id="CommonAppDataPrintHero" Name="PrintHero">
+					<Directory Id="CommonLogsFolder" Name="Logs" />
+					<Directory Id="CommonDataFolder" Name="Data" />
+				</Directory>
+			</Directory>
+
 		</Directory>
 	</Fragment>
 
+	<!-- Main Application Components -->
 	<Fragment>
-		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-			<!-- TODO: Remove the comments around this Component element and the ComponentRef below in order to add resources to this installer. -->
-			<!-- <Component Id="ProductComponent"> -->
-				<!-- TODO: Insert files, registry keys, and other resources here. -->
-			<!-- </Component> -->
+		<ComponentGroup Id="MainApplicationComponents" Directory="INSTALLFOLDER">
+
+			<!-- Main UI Application -->
+			<Component Id="PrintHeroUI" Guid="12345678-1234-5678-9012-123456789012">
+				<File Id="PrintHeroUI.exe" Source="$(var.PrintHero.UI.TargetPath)" KeyPath="yes" />
+				<File Id="PrintHeroUI.deps.json" Source="$(var.PrintHero.UI.TargetDir)PrintHero.UI.deps.json" />
+				<File Id="PrintHeroUI.runtimeconfig.json" Source="$(var.PrintHero.UI.TargetDir)PrintHero.UI.runtimeconfig.json" />
+			</Component>
+
+			<!-- Core Library -->
+			<Component Id="PrintHeroCore" Guid="12345678-1234-5678-9012-123456789013">
+				<File Id="PrintHeroCore.dll" Source="$(var.PrintHero.Core.TargetPath)" />
+			</Component>
+
+			<!-- Console Manager -->
+			<Component Id="PrintHeroConsole" Guid="12345678-1234-5678-9012-123456789014">
+				<File Id="PrintHeroConsole.exe" Source="$(var.PrintHero.Console.TargetPath)" />
+				<File Id="PrintHeroConsole.deps.json" Source="$(var.PrintHero.Console.TargetDir)PrintHero.Console.deps.json" />
+				<File Id="PrintHeroConsole.runtimeconfig.json" Source="$(var.PrintHero.Console.TargetDir)PrintHero.Console.runtimeconfig.json" />
+			</Component>
+
 		</ComponentGroup>
 	</Fragment>
+
+	<!-- Service Components -->
+	<Fragment>
+		<ComponentGroup Id="ServiceComponents" Directory="INSTALLFOLDER">
+
+			<!-- Service Executable -->
+			<Component Id="PrintHeroService" Guid="12345678-1234-5678-9012-123456789015">
+				<File Id="PrintHeroService.exe" Source="$(var.PrintHero.Service.TargetPath)" KeyPath="yes" />
+				<File Id="PrintHeroService.deps.json" Source="$(var.PrintHero.Service.TargetDir)PrintHero.Service.deps.json" />
+				<File Id="PrintHeroService.runtimeconfig.json" Source="$(var.PrintHero.Service.TargetDir)PrintHero.Service.runtimeconfig.json" />
+
+				<!-- Windows Service Installation -->
+				<ServiceInstall Id="PrintHeroServiceInstall"
+								Type="ownProcess"
+								Name="PrintHeroService"
+								DisplayName="PrintHero Printing Service"
+								Description="Monitors folders and automatically prints PDF files"
+								Start="auto"
+								Account="LocalSystem"
+								ErrorControl="normal"
+								Interactive="no" />
+
+				<ServiceControl Id="PrintHeroServiceControl"
+								Name="PrintHeroService"
+								Start="install"
+								Stop="both"
+								Remove="uninstall"
+								Wait="yes" />
+			</Component>
+
+		</ComponentGroup>
+	</Fragment>
+
+	<!-- .NET Runtime Components -->
+	<Fragment>
+		<ComponentGroup Id="DotNetRuntimeComponents" Directory="INSTALLFOLDER">
+
+			<!-- Configuration Files -->
+			<Component Id="ConfigFiles" Guid="12345678-1234-5678-9012-123456789016">
+				<File Id="appsettings.json" Source="appsettings.json" />
+				<File Id="appsettings.Production.json" Source="appsettings.Production.json" />
+			</Component>
+
+			<!-- Required Dependencies -->
+			<Component Id="Dependencies" Guid="12345678-1234-5678-9012-123456789017">
+				<!-- Add specific .NET runtime files if needed -->
+				<CreateFolder />
+			</Component>
+
+		</ComponentGroup>
+	</Fragment>
+
+	<!-- Start Menu Components -->
+	<Fragment>
+		<ComponentGroup Id="StartMenuComponents" Directory="ApplicationProgramsFolder">
+
+			<Component Id="StartMenuShortcuts" Guid="12345678-1234-5678-9012-123456789018">
+				<Shortcut Id="PrintHeroStartMenuShortcut"
+						  Name="PrintHero"
+						  Description="PrintHero - Automatic PDF Printing"
+						  Target="[INSTALLFOLDER]PrintHero.UI.exe"
+						  WorkingDirectory="INSTALLFOLDER"
+						  Icon="PrintHeroIcon.ico" />
+
+				<Shortcut Id="PrintHeroConsoleStartMenuShortcut"
+						  Name="PrintHero Console Manager"
+						  Description="PrintHero Console Management Tool"
+						  Target="[INSTALLFOLDER]PrintHero.Console.exe"
+						  WorkingDirectory="INSTALLFOLDER"
+						  Icon="PrintHeroIcon.ico" />
+
+				<Shortcut Id="UninstallPrintHero"
+						  Name="Uninstall PrintHero"
+						  Description="Uninstall PrintHero"
+						  Target="[SystemFolder]msiexec.exe"
+						  Arguments="/x [ProductCode]" />
+
+				<RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+				<RegistryValue Root="HKCU"
+							   Key="Software\PrintHero\StartMenu"
+							   Name="installed"
+							   Type="integer"
+							   Value="1"
+							   KeyPath="yes" />
+			</Component>
+
+		</ComponentGroup>
+	</Fragment>
+
+	<!-- Desktop Components -->
+	<Fragment>
+		<ComponentGroup Id="DesktopComponents" Directory="DesktopFolder">
+
+			<Component Id="DesktopShortcut" Guid="12345678-1234-5678-9012-123456789019">
+				<Shortcut Id="PrintHeroDesktopShortcut"
+						  Name="PrintHero"
+						  Description="PrintHero - Automatic PDF Printing"
+						  Target="[INSTALLFOLDER]PrintHero.UI.exe"
+						  WorkingDirectory="INSTALLFOLDER"
+						  Icon="PrintHeroIcon.ico" />
+
+				<RegistryValue Root="HKCU"
+							   Key="Software\PrintHero\Desktop"
+							   Name="installed"
+							   Type="integer"
+							   Value="1"
+							   KeyPath="yes" />
+			</Component>
+
+		</ComponentGroup>
+	</Fragment>
+
+	<!-- Registry Components -->
+	<Fragment>
+		<ComponentGroup Id="RegistryComponents" Directory="INSTALLFOLDER">
+
+			<Component Id="RegistryEntries" Guid="12345678-1234-5678-9012-123456789020">
+				<!-- Application Registration -->
+				<RegistryKey Root="HKLM" Key="SOFTWARE\PrintHero">
+					<RegistryValue Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" />
+					<RegistryValue Name="Version" Type="string" Value="1.0.0.0" />
+					<RegistryValue Name="InstallDate" Type="string" Value="[Date]" />
+				</RegistryKey>
+
+				<!-- File Association for PDF monitoring -->
+				<RegistryKey Root="HKLM" Key="SOFTWARE\Classes\.pdf\OpenWithProgids">
+					<RegistryValue Name="PrintHero.PDF" Type="string" Value="" />
+				</RegistryKey>
+
+				<!-- Uninstall Registry -->
+				<RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\PrintHero">
+					<RegistryValue Name="DisplayName" Type="string" Value="PrintHero" />
+					<RegistryValue Name="DisplayVersion" Type="string" Value="1.0.0.0" />
+					<RegistryValue Name="Publisher" Type="string" Value="PrintHero Solutions" />
+					<RegistryValue Name="InstallLocation" Type="string" Value="[INSTALLFOLDER]" />
+					<RegistryValue Name="DisplayIcon" Type="string" Value="[INSTALLFOLDER]PrintHero.UI.exe" />
+					<RegistryValue Name="UninstallString" Type="string" Value="MsiExec.exe /X[ProductCode]" />
+					<RegistryValue Name="NoModify" Type="integer" Value="1" />
+					<RegistryValue Name="NoRepair" Type="integer" Value="1" />
+				</RegistryKey>
+			</Component>
+
+		</ComponentGroup>
+	</Fragment>
+
+	<!-- Custom Actions -->
+	<Fragment>
+		<!-- Create application data folders -->
+		<CustomAction Id="CreateAppDataFolders"
+					  Directory="CommonAppDataPrintHero"
+					  ExeCommand="cmd.exe /c md &quot;[CommonAppDataFolder]PrintHero\Logs&quot; &amp; md &quot;[CommonAppDataFolder]PrintHero\Data&quot;"
+					  Execute="deferred"
+					  Impersonate="no" />
+
+		<!-- Set folder permissions -->
+		<CustomAction Id="SetFolderPermissions"
+					  Directory="CommonAppDataPrintHero"
+					  ExeCommand="icacls &quot;[CommonAppDataFolder]PrintHero&quot; /grant Users:(OI)(CI)F"
+					  Execute="deferred"
+					  Impersonate="no" />
+
+		<!-- Install Sequence -->
+		<InstallExecuteSequence>
+			<Custom Action="CreateAppDataFolders" After="InstallFiles">NOT Installed</Custom>
+			<Custom Action="SetFolderPermissions" After="CreateAppDataFolders">NOT Installed</Custom>
+		</InstallExecuteSequence>
+	</Fragment>
+
 </Wix>

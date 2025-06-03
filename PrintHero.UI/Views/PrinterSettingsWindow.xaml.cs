@@ -8,7 +8,7 @@ namespace PrintHero.UI.Views
 {
     public partial class PrinterSettingsWindow : Window
     {
-        private readonly ILogger<PrinterSettingsWindow>? _logger;
+        private readonly ILogger? _logger;
         private List<string> _availablePrinters = new();
 
         public string? SelectedPrinter { get; private set; }
@@ -21,8 +21,12 @@ namespace PrintHero.UI.Views
             LoadPrinters();
             this.Loaded += PrinterSettingsWindow_Loaded;
         }
+        public PrinterSettingsWindow(ILogger logger) : this()
+        {
+            _logger = logger;
+        }
 
-        public PrinterSettingsWindow(ILogger<PrinterSettingsWindow>? logger) : this()
+        public PrinterSettingsWindow(ILogger<PrinterSettingsWindow> logger) : this()
         {
             _logger = logger;
         }

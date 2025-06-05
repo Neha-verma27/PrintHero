@@ -222,29 +222,4 @@ public partial class App : System.Windows.Application
             return new MainWindow();
         }
     }
-
-    protected override async void OnExit(ExitEventArgs e)
-    {
-        try
-        {
-            Log.Information("Application shutting down...");
-
-            if (_host != null)
-            {
-                await _host.StopAsync();
-                _host.Dispose();
-            }
-
-            Log.Information("Application shutdown complete");
-            Log.CloseAndFlush();
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "Error during shutdown");
-            MessageBox.Show($"Error during shutdown: {ex.Message}", "Shutdown Error",
-                          MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
-
-        base.OnExit(e);
-    }
 }

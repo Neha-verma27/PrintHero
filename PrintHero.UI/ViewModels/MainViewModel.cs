@@ -1,20 +1,14 @@
-﻿// PrintHero.UI/ViewModels/MainViewModel.cs (Updated)
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Windows.Input;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PrintHero.Core.Interfaces;
 using PrintHero.Core.Models;
-using PrintHero.Core.Services;
-using Serilog;
 
 namespace PrintHero.UI.ViewModels
 {
-    public class MainViewModel : INotifyPropertyChanged, IDisposable
+    public class MainViewModel : INotifyPropertyChanged
     {
         private readonly IFileMonitoringService _fileMonitoringService;
         private readonly IPrintingService _printingService;
@@ -234,24 +228,6 @@ namespace PrintHero.UI.ViewModels
             }
         }
 
-        public async Task UpdatePrinterSettingsAsync(string printerName, string paperSize, string orientation)
-        {
-            DefaultPrinter = printerName;
-            PaperSize = paperSize;
-
-            _printingService?.SetPrinterSettings(printerName, paperSize, orientation);
-            await SaveSettingsAsync();
-
-            _logger?.LogInformation($"Printer settings updated: {printerName}, {paperSize}, {orientation}");
-        }
-
-        public async Task AddMonitoredFolderAsync(MonitoredFolder folder)
-        {
-            MonitoredFolders.Add(folder);
-            await SaveSettingsAsync();
-            _logger?.LogInformation($"Added monitored folder: {folder.FolderPath}");
-        }
-
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -267,14 +243,6 @@ namespace PrintHero.UI.ViewModels
             backingStore = value;
             OnPropertyChanged(propertyName);
             return true;
-        }
-
-        public void Dispose()
-        {
-            if (_fileMonitoringService != null)
-            {
-                _fileMonitoringService.FileProcessed -= OnFileProcessed;
-            }
         }
     }
 

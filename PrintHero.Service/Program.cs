@@ -1,4 +1,3 @@
-using PrintHero.Service;
 using Serilog;
 
 // Configure Serilog
@@ -15,15 +14,8 @@ try
 {
     var builder = Host.CreateApplicationBuilder(args);
 
-    // Use Serilog
-    builder.Services.AddSerilog();
-
-    // Add the worker service
-    builder.Services.AddHostedService<Worker>();
-
     var host = builder.Build();
 
-    Log.Information("Starting PrintHero Service");
     await host.RunAsync();
 }
 catch (Exception ex)

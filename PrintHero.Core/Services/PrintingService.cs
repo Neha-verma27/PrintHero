@@ -1,10 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Drawing.Printing;
+using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
-using PdfSharp.Pdf;
-using PdfSharp.Pdf.IO;
+using PdfiumViewer;
 using PrintHero.Core.Interfaces;
-using PrintHero.Core.Models;
 
 namespace PrintHero.Core.Services;
 
@@ -12,8 +11,6 @@ public class PrintingService : IPrintingService
 {
     private readonly ILogger<PrintingService> _logger;
     private string? _defaultPrinter;
-    private string _paperSize = "A4";
-    private string _orientation = "Portrait";
 
     public PrintingService(ILogger<PrintingService> logger)
     {
@@ -24,8 +21,6 @@ public class PrintingService : IPrintingService
     public void SetPrinterSettings(string printerName, string paperSize, string orientation)
     {
         _defaultPrinter = printerName;
-        _paperSize = paperSize;
-        _orientation = orientation;
         _logger.LogInformation($"Printer settings updated: {printerName}, {paperSize}, {orientation}");
     }
 
@@ -76,12 +71,17 @@ public class PrintingService : IPrintingService
     {
         try
         {
-            if (await TryPrintWithAdobeReader(filePath))
+            _logger.LogInformation($"Attempting to print PDF: {filePath}");
+
+            if (await TryPrintPDFFile(filePath))
             {
+                _logger.LogInformation("PDF printed successfully with PowerShell");
+                await MoveFileAfterPrint(filePath);
                 return true;
             }
 
-            return await PrintPdfWithBuiltInMethod(filePath);
+            _logger.LogError("PDF printing failed");
+            return false;
         }
         catch (Exception ex)
         {
@@ -90,95 +90,91 @@ public class PrintingService : IPrintingService
         }
     }
 
-    private async Task<bool> TryPrintWithAdobeReader(string filePath)
+    private async Task<bool> TryPrintPDFFile(string pdfPath)
     {
         try
         {
-            // Try to find Adobe Reader
-            var adobePaths = new[]
+            if (!File.Exists(pdfPath))
             {
-                @"C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe",
-                @"C:\Program Files (x86)\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe",
-                @"C:\Program Files\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe"
-            };
-
-            string? adobePath = adobePaths.FirstOrDefault(File.Exists);
-
-            if (adobePath != null)
-            {
-                var process = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = adobePath,
-                        Arguments = $"/t \"{filePath}\" \"{_defaultPrinter}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
-                };
-
-                process.Start();
-                await process.WaitForExitAsync();
-
-                _logger.LogInformation($"PDF printed using Adobe Reader: {filePath}");
-                return true;
+                _logger.LogError($"PDF not found: {pdfPath}");
+                return false;
             }
 
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to print with Adobe Reader, trying alternative method");
-            return false;
-        }
-    }
+            using var document = PdfDocument.Load(pdfPath);
+            using var printDoc = document.CreatePrintDocument();
 
-    private async Task<bool> PrintPdfWithBuiltInMethod(string filePath)
-    {
-        try
-        {
-            using var document = PdfReader.Open(filePath, PdfDocumentOpenMode.ReadOnly);
+            printDoc.PrinterSettings.PrinterName = _defaultPrinter ?? new PrinterSettings().PrinterName;
+            printDoc.PrintController = new StandardPrintController(); // No print dialog
+            printDoc.DocumentName = Path.GetFileName(pdfPath);
 
-            var printDoc = new PrintDocument();
-            printDoc.PrinterSettings.PrinterName = _defaultPrinter;
-
-            // Set paper size and orientation
-            foreach (PaperSize size in printDoc.PrinterSettings.PaperSizes)
-            {
-                if (size.PaperName.Contains(_paperSize, StringComparison.OrdinalIgnoreCase))
-                {
-                    printDoc.DefaultPageSettings.PaperSize = size;
-                    break;
-                }
-            }
-
-            printDoc.DefaultPageSettings.Landscape = _orientation.Equals("Landscape", StringComparison.OrdinalIgnoreCase);
-
-            int currentPageIndex = 0;
-            printDoc.PrintPage += (sender, e) =>
-            {
-                if (currentPageIndex < document.PageCount)
-                {
-                    // This is a simplified implementation
-                    // For proper PDF rendering, you'd need a more sophisticated approach
-                    e.Graphics!.DrawString($"PDF Page {currentPageIndex + 1}",
-                        new Font("Arial", 12), Brushes.Black, 100, 100);
-
-                    currentPageIndex++;
-                    e.HasMorePages = currentPageIndex < document.PageCount;
-                }
-            };
-
+            _logger.LogInformation($"Sending PDF to printer: {_defaultPrinter}");
             printDoc.Print();
 
-            _logger.LogInformation($"PDF printed using built-in method: {filePath}");
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to print PDF with built-in method: {filePath}");
+            _logger.LogError(ex, $"Error printing PDF: {pdfPath}");
             return false;
         }
+    }
+
+    private async Task MoveFileAfterPrint(string sourceFilePath)
+    {
+        try
+        {
+            // Get the directory of the source file
+            string sourceDirectory = Path.GetDirectoryName(sourceFilePath) ?? string.Empty;
+            string printedFolder = Path.Combine(sourceDirectory, "Printed");
+
+            // Create date subfolder
+            string dateFolder = DateTime.Now.ToString("yyyy-MM-dd");
+            string destinationFolder = Path.Combine(printedFolder, dateFolder);
+
+            // Create destination directory if it doesn't exist
+            if (!Directory.Exists(destinationFolder))
+            {
+                Directory.CreateDirectory(destinationFolder);
+                _logger.LogInformation($"Created directory: {destinationFolder}");
+            }
+
+            string fileName = Path.GetFileName(sourceFilePath);
+            string destinationPath = Path.Combine(destinationFolder, fileName);
+
+            // Handle filename conflicts
+            destinationPath = GetUniqueFileName(destinationPath);
+
+            // Move the file
+            File.Move(sourceFilePath, destinationPath);
+            _logger.LogInformation($"File moved from {sourceFilePath} to {destinationPath}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error moving file after print: {sourceFilePath}");
+        }
+    }
+
+    private string GetUniqueFileName(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return filePath;
+
+        string directory = Path.GetDirectoryName(filePath) ?? string.Empty;
+        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
+        string extension = Path.GetExtension(filePath);
+
+        int counter = 1;
+        string newFilePath;
+
+        do
+        {
+            string newFileName = $"{fileNameWithoutExtension}_{counter:D3}{extension}";
+            newFilePath = Path.Combine(directory, newFileName);
+            counter++;
+        }
+        while (File.Exists(newFilePath));
+
+        return newFilePath;
     }
 
     private async Task<bool> PrintDocumentAsync(string filePath)
@@ -246,32 +242,6 @@ public class PrintingService : IPrintingService
         {
             _logger.LogError(ex, $"Failed to print image: {filePath}");
             return false;
-        }
-    }
-
-    public Task<bool> TestPrintAsync()
-    {
-        try
-        {
-            var printDoc = new PrintDocument();
-            printDoc.PrinterSettings.PrinterName = _defaultPrinter;
-
-            printDoc.PrintPage += (sender, e) =>
-            {
-                var font = new Font("Arial", 12);
-                e.Graphics!.DrawString("PrintHero Test Page",
-                    new Font("Arial", 16, FontStyle.Bold), Brushes.Black, 100, 100);
-                e.Graphics.DrawString($"Printer: {_defaultPrinter}", font, Brushes.Black, 100, 150);
-                e.Graphics.DrawString($"Date: {DateTime.Now}", font, Brushes.Black, 100, 180);
-            };
-
-            printDoc.Print();
-            return Task.FromResult(true);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Test print failed");
-            return Task.FromResult(false);
         }
     }
 }

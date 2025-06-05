@@ -184,7 +184,6 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
     {
         try
         {
-            // Wait for file to be available (not locked by another process)
             if (!await WaitForFileAvailable(filePath))
             {
                 _logger.LogWarning($"File is not available for processing: {filePath}");
@@ -198,12 +197,18 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
 
             if (success)
             {
-                _logger.LogInformation($"Successfully printed file: {filePath}");
+                bool moveSuccess = MoveFileToFolder(filePath, null);
+                if (moveSuccess)
+                {
+                    _logger.LogInformation($"PDF printed and moved successfully: {filePath}");
+                }
+                else
+                {
+                    _logger.LogWarning($"PDF printed successfully but failed to move file: {filePath}");
+                }
 
-                // Handle post-print action
-                await HandlePostPrintAction(filePath, folder);
+                //await HandlePostPrintAction(filePath, folder);
 
-                // Raise file processed event
                 FileProcessed?.Invoke(this, new FileProcessedEventArgs
                 {
                     FilePath = filePath,
@@ -236,6 +241,67 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
                 ErrorMessage = ex.Message
             });
         }
+    }
+
+
+    private bool MoveFileToFolder(string sourceFilePath, string destinationFolder)
+    {
+        try
+        {
+            // Set default destination folder if not provided
+            if (string.IsNullOrEmpty(destinationFolder))
+            {
+                destinationFolder = Path.Combine(Path.GetDirectoryName(sourceFilePath), "Printed");
+            }
+
+            // Create destination directory if it doesn't exist
+            if (!Directory.Exists(destinationFolder))
+            {
+                Directory.CreateDirectory(destinationFolder);
+                _logger.LogInformation($"Created directory: {destinationFolder}");
+            }
+
+            // Get the file name
+            string fileName = Path.GetFileName(sourceFilePath);
+            string destinationPath = Path.Combine(destinationFolder, fileName);
+
+            // Handle file name conflicts
+            destinationPath = GetUniqueFileName(destinationPath);
+
+            // Move the file
+            File.Move(sourceFilePath, destinationPath);
+
+            _logger.LogInformation($"File moved from {sourceFilePath} to {destinationPath}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error moving file: {ex.Message}");
+            return false;
+        }
+    }
+
+    private string GetUniqueFileName(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return filePath;
+
+        string directory = Path.GetDirectoryName(filePath);
+        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
+        string extension = Path.GetExtension(filePath);
+
+        int counter = 1;
+        string newFilePath;
+
+        do
+        {
+            string newFileName = $"{fileNameWithoutExtension}_{counter}{extension}";
+            newFilePath = Path.Combine(directory, newFileName);
+            counter++;
+        }
+        while (File.Exists(newFilePath));
+
+        return newFilePath;
     }
 
     private async Task<bool> WaitForFileAvailable(string filePath, int maxWaitTimeMs = 10000)
@@ -292,7 +358,6 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
                     break;
 
                 case PostPrintAction.KeepFile:
-                    // Do nothing - keep the file in place
                     break;
             }
         }

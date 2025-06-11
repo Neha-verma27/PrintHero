@@ -8,6 +8,7 @@ public interface IPrintingService
 //    void Dispose();
     void SetPrinterSettings(string printerName, string paperSize, string orientation);
     Task<bool> PrintFileAsync(string filePath);
+    bool IsEnabled { get; set; }
 
 }
 

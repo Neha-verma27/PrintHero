@@ -12,6 +12,8 @@ public class PrintingService : IPrintingService
     private readonly ILogger<PrintingService> _logger;
     private string? _defaultPrinter;
 
+    public bool IsEnabled { get; set; } = false;
+
     public PrintingService(ILogger<PrintingService> logger)
     {
         _logger = logger;
@@ -28,6 +30,12 @@ public class PrintingService : IPrintingService
     {
         try
         {
+            if (!IsEnabled)
+            {
+                _logger.LogInformation("Printing is disabled - skipping file: {FilePath}", filePath);
+                return false;
+            }
+
             if (string.IsNullOrEmpty(_defaultPrinter))
             {
                 _logger.LogError("No default printer set");

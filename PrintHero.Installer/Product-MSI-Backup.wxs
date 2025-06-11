@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- BACKUP: Original MSI Configuration -->
+<!-- This file contains the original MSI installer configuration -->
+<!-- Use this if you need to revert back to MSI format -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<!-- MSI Configuration backed up - see Product.wxs for Bundle configuration -->
+</Wix>

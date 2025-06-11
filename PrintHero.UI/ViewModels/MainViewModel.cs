@@ -162,10 +162,15 @@ namespace PrintHero.UI.ViewModels
                     return;
                 }
 
-                // Update printer settings
+                // Update printer settings and enable printing
                 if (!string.IsNullOrEmpty(DefaultPrinter))
                 {
                     _printingService?.SetPrinterSettings(DefaultPrinter, PaperSize, "Portrait");
+                }
+                
+                if (_printingService != null)
+                {
+                    _printingService.IsEnabled = true;
                 }
 
                 // Start monitoring
@@ -190,6 +195,12 @@ namespace PrintHero.UI.ViewModels
                 {
                     _logger?.LogWarning("File monitoring service not available");
                     return;
+                }
+
+                // Disable printing
+                if (_printingService != null)
+                {
+                    _printingService.IsEnabled = false;
                 }
 
                 await _fileMonitoringService.StopMonitoringAsync();

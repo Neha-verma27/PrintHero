@@ -4,9 +4,9 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>3.10</ProductVersion>
-    <ProjectGuid>{0b6d2430-1ad8-4e46-b17b-d8f6e7dcadab}</ProjectGuid>
+    <ProjectGuid>{F8F3B9D0-4B8E-4F9A-8F9A-8F9A8F9A8F9B}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>PrintHeroSetup</OutputName>
+    <OutputName>PrintHero</OutputName>
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>

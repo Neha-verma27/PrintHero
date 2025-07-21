@@ -1,2 +1,0 @@
-C:\Projects\PrintHero\PrintHero\PrintHero.MSI\bin\Release\PrintHero.msi
-C:\Projects\PrintHero\PrintHero\PrintHero.MSI\bin\Release\PrintHero.wixpdb

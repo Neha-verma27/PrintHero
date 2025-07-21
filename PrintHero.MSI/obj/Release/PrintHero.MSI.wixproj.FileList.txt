@@ -1,6 +1,0 @@
-obj\Release\Product.wixobj
-C:\Projects\PrintHero\PrintHero\PrintHero.MSI\bin\Release\PrintHero.msi
-C:\Projects\PrintHero\PrintHero\PrintHero.MSI\bin\Release\PrintHero.wixpdb
-obj\Release\PrintHero.MSI.wixproj.BindContentsFileListnull.txt
-obj\Release\PrintHero.MSI.wixproj.BindOutputsFileListnull.txt
-obj\Release\PrintHero.MSI.wixproj.BindBuiltOutputsFileListnull.txt

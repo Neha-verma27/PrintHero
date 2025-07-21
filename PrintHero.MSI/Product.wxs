@@ -90,19 +90,52 @@
 				<File Id="PrintHeroCorePdb" Source="..\PrintHero.Core\bin\Release\net8.0-windows\PrintHero.Core.pdb" />
 			</Component>
 
-			<!-- Microsoft Extensions -->
-			<Component Id="MSExtensions" Guid="22222222-2222-2222-2222-222222222222">
+			<!-- Microsoft Extensions Configuration -->
+			<Component Id="MSExtensionsConfig" Guid="22222222-2222-2222-2222-222222222222">
 				<File Id="MSExtConfigAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.Abstractions.dll" KeyPath="yes" />
 				<File Id="MSExtConfigBinder" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.Binder.dll" />
 				<File Id="MSExtConfig" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.dll" />
+				<File Id="MSExtConfigCommandLine" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.CommandLine.dll" />
+				<File Id="MSExtConfigEnvVars" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.EnvironmentVariables.dll" />
+				<File Id="MSExtConfigFileExt" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.FileExtensions.dll" />
 				<File Id="MSExtConfigJson" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.Json.dll" />
-				<File Id="MSExtDI" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.DependencyInjection.dll" />
+				<File Id="MSExtConfigUserSecrets" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.UserSecrets.dll" />
+			</Component>
+
+			<!-- Microsoft Extensions Dependency Injection -->
+			<Component Id="MSExtensionsDI" Guid="23232323-2323-2323-2323-232323232323">
+				<File Id="MSExtDI" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.DependencyInjection.dll" KeyPath="yes" />
 				<File Id="MSExtDIAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
-				<File Id="MSExtHosting" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.dll" />
+			</Component>
+
+			<!-- Microsoft Extensions File Providers -->
+			<Component Id="MSExtensionsFileProviders" Guid="24242424-2424-2424-2424-242424242424">
+				<File Id="MSExtFileProvAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.FileProviders.Abstractions.dll" KeyPath="yes" />
+				<File Id="MSExtFileProvPhysical" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.FileProviders.Physical.dll" />
+				<File Id="MSExtFileSystemGlobbing" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.FileSystemGlobbing.dll" />
+			</Component>
+
+			<!-- Microsoft Extensions Hosting -->
+			<Component Id="MSExtensionsHosting" Guid="25252525-2525-2525-2525-252525252525">
+				<File Id="MSExtHosting" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.dll" KeyPath="yes" />
 				<File Id="MSExtHostingAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.Abstractions.dll" />
-				<File Id="MSExtLogging" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.dll" />
+			</Component>
+
+			<!-- Microsoft Extensions Logging -->
+			<Component Id="MSExtensionsLogging" Guid="26262626-2626-2626-2626-262626262626">
+				<File Id="MSExtLogging" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.dll" KeyPath="yes" />
 				<File Id="MSExtLoggingAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Abstractions.dll" />
-				<File Id="MSExtOptions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Options.dll" />
+				<File Id="MSExtLoggingConfig" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Configuration.dll" />
+				<File Id="MSExtLoggingConsole" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Console.dll" />
+				<File Id="MSExtLoggingDebug" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Debug.dll" />
+				<File Id="MSExtLoggingEventLog" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.EventLog.dll" />
+				<File Id="MSExtLoggingEventSource" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.EventSource.dll" />
+			</Component>
+
+			<!-- Microsoft Extensions Options -->
+			<Component Id="MSExtensionsOptions" Guid="27272727-2727-2727-2727-272727272727">
+				<File Id="MSExtOptions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Options.dll" KeyPath="yes" />
+				<File Id="MSExtOptionsConfigExt" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Options.ConfigurationExtensions.dll" />
 				<File Id="MSExtPrimitives" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Primitives.dll" />
 			</Component>
 
@@ -125,12 +158,23 @@
 			</Component>
 
 			<!-- System Libraries -->
-			<Component Id="SystemLibraries" Guid="55555555-5555-5555-5555-555555555555">
-				<File Id="SystemCodeDom" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.CodeDom.dll" KeyPath="yes" />
-				<File Id="SystemDataSQLite" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.Data.SQLite.dll" />
-				<File Id="SystemTextJson" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.Text.Json.dll" />
-				<File Id="SystemDiagnosticSource" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.Diagnostics.DiagnosticSource.dll" />
+			<Component Id="SystemLibraries" Guid="28282828-2828-2828-2828-282828282828">
+				<File Id="SystemManagement" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.Management.dll" KeyPath="yes" />
 			</Component>
+
+			<!-- Azure and Identity Dependencies --><!--
+			<Component Id="AzureIdentityLibraries" Guid="29292929-2929-2929-2929-292929292929">
+				<File Id="AzureCore" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Azure.Core.dll" KeyPath="yes" />
+				<File Id="AzureIdentity" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Azure.Identity.dll" />
+				<File Id="MicrosoftIdentityClient" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Identity.Client.dll" />
+				<File Id="MicrosoftIdentityClientExtensions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Identity.Client.Extensions.Msal.dll" />
+				<File Id="MicrosoftIdentityModelAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.IdentityModel.Abstractions.dll" />
+				<File Id="MicrosoftIdentityModelJWT" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.IdentityModel.JsonWebTokens.dll" />
+				<File Id="MicrosoftIdentityModelLogging" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.IdentityModel.Logging.dll" />
+				<File Id="MicrosoftIdentityModelProtocols" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.IdentityModel.Protocols.dll" />
+				<File Id="MicrosoftIdentityModelProtocolsOIDC" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll" />
+				<File Id="MicrosoftIdentityModelTokens" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.IdentityModel.Tokens.dll" />
+			</Component>-->
 
 			<!-- Native Libraries -->
 			<Component Id="NativeLibraries" Guid="66666666-6666-6666-6666-666666666666">
@@ -180,11 +224,11 @@
 				<File Id="PrintHeroServiceRuntimeConfig" Source="..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.runtimeconfig.json" />
 			</Component>
 
-			<!-- Service Configuration Files -->
+			<!-- Service Configuration Files --><!--
 			<Component Id="ServiceConfig" Guid="AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA">
 				<File Id="AppSettingsJson" Source="..\PrintHero.Service\bin\Release\net8.0-windows\appsettings.json" KeyPath="yes" />
 				<File Id="AppSettingsDevJson" Source="..\PrintHero.Service\bin\Release\net8.0-windows\appsettings.Development.json" />
-			</Component>
+			</Component>-->
 
 		</ComponentGroup>
 	</Fragment>

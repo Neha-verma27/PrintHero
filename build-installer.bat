@@ -1,69 +1,101 @@
 @echo off
-REM PrintHero Installer Build Script
-REM This script builds the PrintHero application and creates the installer
-
 echo Building PrintHero Installer...
 echo.
 
-REM Build all projects in Release configuration
-echo Step 1: Building PrintHero Core...
-dotnet build PrintHero.Core\PrintHero.Core.csproj --configuration Release
+REM Build applications
+echo Step 1: Building applications...
+dotnet build PrintHero.UI\PrintHero.UI.csproj --configuration Release --nologo
 if %ERRORLEVEL% neq 0 (
-    echo Failed to build PrintHero.Core
-    pause
+    echo ERROR: Build failed
+    echo Press any key to continue...
+    pause >nul
     exit /b 1
 )
+echo ✓ Applications built successfully
 
-echo Step 2: Building PrintHero UI...
-dotnet build PrintHero.UI\PrintHero.UI.csproj --configuration Release
-if %ERRORLEVEL% neq 0 (
-    echo Failed to build PrintHero.UI
-    pause
-    exit /b 1
-)
-
-echo Step 3: Building PrintHero Service...
-dotnet build PrintHero.Service\PrintHero.Service.csproj --configuration Release
-if %ERRORLEVEL% neq 0 (
-    echo Failed to build PrintHero.Service
-    pause
-    exit /b 1
-)
-
-echo Step 4: Building MSI Installer...
-cd PrintHero.Installer
-
-REM Try different MSBuild paths
-set MSBUILD_PATH=""
-if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe" (
-    set MSBUILD_PATH="%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-) else if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe" (
-    set MSBUILD_PATH="%ProgramFiles%\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe"
-) else if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" (
-    set MSBUILD_PATH="%ProgramFiles%\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
-) else if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe" (
-    set MSBUILD_PATH="%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-) else if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\MSBuild.exe" (
-    set MSBUILD_PATH="%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\MSBuild.exe"
-) else if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" (
-    set MSBUILD_PATH="%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe"
+REM Check if WiX is installed
+echo Step 2: Checking for WiX toolset...
+where candle >nul 2>&1
+if %ERRORLEVEL% equ 0 (
+    echo ✓ WiX toolset found, using direct WiX build
+    goto :wix_build
 ) else (
-    echo MSBuild not found. Please ensure Visual Studio or Build Tools are installed.
-    pause
+    echo WiX CLI tools not found, trying MSBuild...
+    goto :msbuild_search
+)
+
+:msbuild_search
+REM Find MSBuild
+echo Step 3: Looking for MSBuild...
+set MSBUILD_FOUND=0
+
+if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe" (
+    set "MSBUILD=%ProgramFiles%\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+    set MSBUILD_FOUND=1
+    echo ✓ Found VS 2022 Community MSBuild
+)
+if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe" (
+    set "MSBUILD=%ProgramFiles%\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe"
+    set MSBUILD_FOUND=1
+    echo ✓ Found VS 2022 Professional MSBuild
+)
+
+if %MSBUILD_FOUND% equ 0 (
+    echo ERROR: Neither WiX nor MSBuild found
+    echo Please install either:
+    echo 1. WiX Toolset v3.11+ OR
+    echo 2. Visual Studio 2022
+    echo Press any key to continue...
+    pause >nul
     exit /b 1
 )
 
-echo Using MSBuild from: %MSBUILD_PATH%
-%MSBUILD_PATH% PrintHero.Installer.wixproj /p:Configuration=Release /p:Platform=x86
+echo Step 4: Building installer with MSBuild...
+echo Using: %MSBUILD%
+"%MSBUILD%" PrintHero.Installer\PrintHero.Installer.wixproj /p:Configuration=Release /p:Platform=x64 /verbosity:normal
 if %ERRORLEVEL% neq 0 (
-    echo Failed to build installer
-    pause
+    echo ERROR: MSBuild failed
+    echo Press any key to continue...
+    pause >nul
+    exit /b 1
+)
+goto :success
+
+:wix_build
+echo Step 4: Building installer with WiX tools...
+cd PrintHero.Installer
+candle Product.wxs -out obj\Product.wixobj
+if %ERRORLEVEL% neq 0 (
+    echo ERROR: candle.exe failed
+    cd ..
+    echo Press any key to continue...
+    pause >nul
+    exit /b 1
+)
+
+light obj\Product.wixobj -out bin\PrintHero-Setup.msi -ext WixUIExtension
+if %ERRORLEVEL% neq 0 (
+    echo ERROR: light.exe failed
+    cd ..
+    echo Press any key to continue...
+    pause >nul
     exit /b 1
 )
 cd ..
 
+:success
 echo.
-echo Build completed successfully!
-echo MSI Installer created at: PrintHero.Installer\bin\Release\PrintHeroSetup.msi
-echo.
-pause
+echo =====================================================
+echo ✓ Build completed successfully!
+echo =====================================================
+
+if exist "PrintHero.Installer\bin\Release\PrintHeroSetup.msi" (
+    echo Installer: PrintHero.Installer\bin\Release\PrintHeroSetup.msi
+) else if exist "PrintHero.Installer\bin\PrintHero-Setup.msi" (
+    echo Installer: PrintHero.Installer\bin\PrintHero-Setup.msi
+) else (
+    echo WARNING: Installer file not found in expected location
+)
+
+echo Press any key to continue...
+pause >nul

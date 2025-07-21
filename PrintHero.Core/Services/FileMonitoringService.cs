@@ -1,7 +1,5 @@
-﻿using System.Data;
-using System.IO;
+﻿using System.IO;
 using Microsoft.Extensions.Logging;
-using PrintHero.Core.Data;
 using PrintHero.Core.Interfaces;
 using PrintHero.Core.Models;
 
@@ -10,7 +8,7 @@ namespace PrintHero.Core.Services;
 public class FileMonitoringService : IFileMonitoringService, IDisposable
 {
     private readonly IPrintingService _printingService;
-    private readonly DatabaseService _databaseService;
+    private readonly JsonConfigService _jsonConfigService;
     private readonly ILogger<FileMonitoringService> _logger;
     private readonly Dictionary<string, FileSystemWatcher> _watchers = new();
     private readonly object _lockObject = new();
@@ -18,10 +16,10 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
 
     public event EventHandler<FileProcessedEventArgs>? FileProcessed;
 
-    public FileMonitoringService(DatabaseService databaseService, IPrintingService printingService, ILogger<FileMonitoringService> logger)
+    public FileMonitoringService(JsonConfigService jsonConfigService, IPrintingService printingService, ILogger<FileMonitoringService> logger)
     {
         _printingService = printingService;
-        _databaseService = databaseService;
+        _jsonConfigService = jsonConfigService;
         _logger = logger;
     }
 
@@ -29,6 +27,16 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
     {
         try
         {
+            lock (_lockObject)
+            {
+                if (_isRunning)
+                {
+                    _logger?.LogWarning("File monitoring is already running");
+                    return;
+                }
+                _isRunning = true;
+            }
+
             if (folders == null)
             {
                 folders = await GetActiveMonitoredFoldersAsync();
@@ -44,45 +52,26 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Failed to start monitoring");
+            lock (_lockObject)
+            {
+                _isRunning = false;
+            }
             throw;
         }
     }
 
     private async Task<List<MonitoredFolder>> GetActiveMonitoredFoldersAsync()
     {
-        var folders = new List<MonitoredFolder>();
-
         try
         {
-            using var connection = _databaseService.GetConnection();
-            await connection.OpenAsync();
-
-            var sql = "SELECT * FROM MonitoredFolders WHERE IsActive = 1";
-            using var command = new System.Data.SQLite.SQLiteCommand(sql, connection);
-            using var reader = (System.Data.SQLite.SQLiteDataReader)await command.ExecuteReaderAsync();
-
-            while (await reader.ReadAsync())
-            {
-                folders.Add(new MonitoredFolder
-                {
-                    Id = reader.GetInt32("Id"),
-                    FolderPath = reader.GetString("FolderPath"),
-                    IsActive = reader.GetBoolean("IsActive"),
-                    FilePattern = reader.GetString("FilePattern"),
-                    IncludeSubfolders = reader.GetBoolean("IncludeSubfolders"),
-                    CreatedAt = DateTime.Parse(reader.GetString("CreatedAt")),
-                    LastActivity = reader.IsDBNull("LastActivity") ? null : DateTime.Parse(reader.GetString("LastActivity")),
-                    PostPrintAction = (PostPrintAction)reader.GetInt32("PostPrintAction"),
-                    CustomMoveFolder = reader.IsDBNull("CustomMoveFolder") ? null : reader.GetString("CustomMoveFolder")
-                });
-            }
+            var allFolders = await _jsonConfigService.GetMonitoredFoldersAsync();
+            return allFolders.Where(f => f.IsActive).ToList();
         }
         catch (Exception ex)
         {
             _logger?.LogError(ex, "Failed to get monitored folders");
+            return new List<MonitoredFolder>();
         }
-
-        return folders;
     }
 
     public Task StopMonitoringAsync()
@@ -184,6 +173,20 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
     {
         try
         {
+            // Check if file exists
+            if (!File.Exists(filePath))
+            {
+                _logger.LogWarning($"File no longer exists: {filePath}");
+                return;
+            }
+
+            // Check file type against pattern
+            if (!IsFileMatchingPattern(filePath, folder.FilePattern))
+            {
+                _logger.LogDebug($"File does not match pattern {folder.FilePattern}: {filePath}");
+                return;
+            }
+
             if (!await WaitForFileAvailable(filePath))
             {
                 _logger.LogWarning($"File is not available for processing: {filePath}");
@@ -197,17 +200,10 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
 
             if (success)
             {
-                bool moveSuccess = MoveFileToFolder(filePath, null);
-                if (moveSuccess)
-                {
-                    _logger.LogInformation($"PDF printed and moved successfully: {filePath}");
-                }
-                else
-                {
-                    _logger.LogWarning($"PDF printed successfully but failed to move file: {filePath}");
-                }
-
-                //await HandlePostPrintAction(filePath, folder);
+                // Only handle post-print action, remove duplicate file movement
+                await HandlePostPrintActionAsync(filePath, folder);
+                
+                _logger.LogInformation($"File processed successfully: {filePath}");
 
                 FileProcessed?.Invoke(this, new FileProcessedEventArgs
                 {
@@ -328,7 +324,7 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
         return false;
     }
 
-    private async Task HandlePostPrintAction(string filePath, MonitoredFolder folder)
+    private async Task HandlePostPrintActionAsync(string filePath, MonitoredFolder folder)
     {
         try
         {
@@ -364,6 +360,33 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Failed to handle post-print action for file: {filePath}");
+        }
+    }
+
+    private bool IsFileMatchingPattern(string filePath, string pattern)
+    {
+        try
+        {
+            var fileName = Path.GetFileName(filePath);
+            
+            // Handle common patterns
+            if (pattern == "*.*")
+                return true;
+                
+            if (pattern.StartsWith("*."))
+            {
+                var extension = pattern.Substring(1); // Remove the *
+                return filePath.EndsWith(extension, StringComparison.OrdinalIgnoreCase);
+            }
+            
+            // For more complex patterns, use basic wildcard matching
+            var regexPattern = pattern.Replace("*", ".*").Replace("?", ".");
+            return System.Text.RegularExpressions.Regex.IsMatch(fileName, regexPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error matching file pattern {pattern} for file {filePath}");
+            return true; // Default to processing the file if pattern matching fails
         }
     }
 

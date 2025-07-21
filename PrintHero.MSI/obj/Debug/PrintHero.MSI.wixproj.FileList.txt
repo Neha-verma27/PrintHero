@@ -1,0 +1,6 @@
+obj\Debug\Product.wixobj
+C:\Projects\PrintHero\PrintHero\PrintHero.MSI\bin\Debug\PrintHero.msi
+C:\Projects\PrintHero\PrintHero\PrintHero.MSI\bin\Debug\PrintHero.wixpdb
+obj\Debug\PrintHero.MSI.wixproj.BindContentsFileListnull.txt
+obj\Debug\PrintHero.MSI.wixproj.BindOutputsFileListnull.txt
+obj\Debug\PrintHero.MSI.wixproj.BindBuiltOutputsFileListnull.txt

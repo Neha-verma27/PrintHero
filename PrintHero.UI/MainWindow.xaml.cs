@@ -26,26 +26,60 @@ public partial class MainWindow : Window
         this.Loaded += MainWindow_Loaded;
     }
 
-    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        LoadInitialData();
+        await LoadInitialDataAsync();
+        
+        // Debug: Check DataContext and binding state
+        _logger?.LogInformation("MainWindow loaded - DataContext is ViewModel: {IsViewModel}, ViewModel IsServiceRunning: {IsRunning}", 
+            DataContext == _viewModel, _viewModel?.IsServiceRunning ?? false);
+            
+        // Force a final UI refresh after everything is loaded
+        Dispatcher.BeginInvoke(new Action(async () =>
+        {
+            if (_viewModel != null)
+            {
+                // Wait a moment for all async operations to complete
+                await Task.Delay(1000);
+                
+                _logger?.LogInformation("Final UI refresh - IsServiceRunning: {IsRunning}, Toggle IsChecked: {IsChecked}", 
+                    _viewModel.IsServiceRunning, PowerToggle.IsChecked);
+                    
+                // Ensure toggle always matches ViewModel state after initialization
+                if (PowerToggle.IsChecked != _viewModel.IsServiceRunning)
+                {
+                    _logger?.LogInformation("🔄 Syncing toggle state - ViewModel: {ViewModelState}, Toggle: {ToggleState}", 
+                        _viewModel.IsServiceRunning, PowerToggle.IsChecked);
+                    PowerToggle.IsChecked = _viewModel.IsServiceRunning;
+                }
+                
+                // For the desired behavior, ensure service is always ON
+                if (_viewModel.IsServiceRunning)
+                {
+                    _logger?.LogInformation("✅ PrintHero is running and monitoring - Toggle is ON");
+                }
+                else
+                {
+                    _logger?.LogWarning("⚠️ PrintHero service is not running - this may not be the desired state");
+                }
+            }
+        }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
     }
 
-    private void LoadInitialData()
+    private async Task LoadInitialDataAsync()
     {
         try
         {
-            FilesPrintedText.Text = _viewModel?.FilesProcessedToday.ToString() ?? "0";
-            PrintingErrorsText.Text = "0";
-            PrinterNameText.Text = _viewModel?.DefaultPrinter ?? "No printer selected";
-            PaperSizeText.Text = "A4";
-
-            var firstFolder = _viewModel?.MonitoredFolders?.FirstOrDefault();
-            FolderPathText.Text = firstFolder?.FolderPath ?? "No folder selected";
-
-            LicenseNumberText.Text = _viewModel?.LicenseKey ?? "**************";
-            PowerToggle.IsChecked = _viewModel?.IsServiceRunning ?? false;
-
+            if (_viewModel != null)
+            {
+                // Wait for ViewModel to fully initialize
+                _logger?.LogInformation("Waiting for ViewModel initialization...");
+                await _viewModel.InitializationTask;
+                _logger?.LogInformation("ViewModel initialization completed, refreshing UI...");
+                
+                // Update UI with ViewModel data
+                await RefreshUIFromViewModel();
+            }
         }
         catch (Exception ex)
         {
@@ -53,20 +87,52 @@ public partial class MainWindow : Window
         }
     }
 
+    private async Task RefreshUIFromViewModel()
+    {
+        try
+        {
+            if (_viewModel != null)
+            {
+                // Force refresh of key properties
+                _viewModel.NotifyPropertyChanged(nameof(_viewModel.IsServiceRunning));
+                _viewModel.NotifyPropertyChanged(nameof(_viewModel.DefaultPrinter));
+                _viewModel.NotifyPropertyChanged(nameof(_viewModel.PaperSize));
+                _viewModel.NotifyPropertyChanged(nameof(_viewModel.FirstMonitoredFolder));
+                _viewModel.NotifyPropertyChanged(nameof(_viewModel.FilesProcessedToday));
+                _viewModel.NotifyPropertyChanged(nameof(_viewModel.PrintingErrorsToday));
+
+                // Log current state for debugging
+                _logger?.LogInformation("UI refreshed - Printer: {Printer}, Folder: {Folder}, IsServiceRunning: {IsRunning}", 
+                    _viewModel.DefaultPrinter, _viewModel.FirstMonitoredFolder, _viewModel.IsServiceRunning);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to refresh UI from ViewModel");
+        }
+    }
+
     private void PowerToggle_Checked(object sender, RoutedEventArgs e)
     {
         try
         {
-            if (_viewModel?.StartServiceCommand != null)
+            // Only start service if it's not already running (prevent circular calls)
+            if (_viewModel != null && !_viewModel.IsServiceRunning)
             {
-                _viewModel.StartServiceCommand.Execute(null);
+                if (_viewModel.StartServiceCommand != null)
+                {
+                    _viewModel.StartServiceCommand.Execute(null);
+                    _logger?.LogInformation("Service started via UI toggle");
+                }
+                else
+                {
+                    _logger?.LogWarning("StartServiceCommand is null - ViewModel not properly initialized");
+                }
             }
             else
             {
-                _logger?.LogWarning("StartServiceCommand is null - ViewModel not properly initialized");
+                _logger?.LogInformation("Service already running - toggle checked event ignored");
             }
-
-            _logger?.LogInformation("Service started via UI toggle");
         }
         catch (Exception ex)
         {
@@ -78,16 +144,23 @@ public partial class MainWindow : Window
     {
         try
         {
-            if (_viewModel?.StopServiceCommand != null)
+            // Only stop service if it's currently running (prevent circular calls)
+            if (_viewModel != null && _viewModel.IsServiceRunning)
             {
-                _viewModel.StopServiceCommand.Execute(null);
+                if (_viewModel.StopServiceCommand != null)
+                {
+                    _viewModel.StopServiceCommand.Execute(null);
+                    _logger?.LogInformation("Service stopped via UI toggle");
+                }
+                else
+                {
+                    _logger?.LogWarning("StopServiceCommand is null - ViewModel not properly initialized");
+                }
             }
             else
             {
-                _logger?.LogWarning("StopServiceCommand is null - ViewModel not properly initialized");
+                _logger?.LogInformation("Service already stopped - toggle unchecked event ignored");
             }
-
-            _logger?.LogInformation("Service stopped via UI toggle");
         }
         catch (Exception ex)
         {
@@ -105,34 +178,22 @@ public partial class MainWindow : Window
 
             if (result == true)
             {
-                // Update main window with new settings
-                if (!string.IsNullOrEmpty(printerSettingsWindow.SelectedPrinter))
+                // Update ViewModel with new settings - UI will auto-update via binding
+                if (!string.IsNullOrEmpty(printerSettingsWindow.SelectedPrinter) && _viewModel != null)
                 {
-                    PrinterNameText.Text = printerSettingsWindow.SelectedPrinter;
-
-                    // Update ViewModel if available
-                    if (_viewModel != null)
-                    {
-                        _viewModel.DefaultPrinter = printerSettingsWindow.SelectedPrinter;
-                    }
+                    _viewModel.DefaultPrinter = printerSettingsWindow.SelectedPrinter;
                 }
 
                 // Update paper size
-                if (!string.IsNullOrEmpty(printerSettingsWindow.PaperSize))
+                if (!string.IsNullOrEmpty(printerSettingsWindow.PaperSize) && _viewModel != null)
                 {
                     string paperSize = printerSettingsWindow.PaperSize;
                     if (paperSize.Contains("("))
                     {
                         paperSize = paperSize.Substring(0, paperSize.IndexOf("(")).Trim();
                     }
-                    PaperSizeText.Text = paperSize;
-
-                    if (_viewModel != null)
-                    {
-                        _viewModel.PaperSize = paperSize;
-                    }
+                    _viewModel.PaperSize = paperSize;
                 }
-                LoadPrinterSettings();
                 _logger.LogInformation($"Printer settings updated Printer: {printerSettingsWindow.SelectedPrinter}, Paper: {printerSettingsWindow.PaperSize}, Orientation: {printerSettingsWindow.Orientation}");
 
                 MessageBox.Show("Printer settings have been updated successfully!",
@@ -159,29 +220,24 @@ public partial class MainWindow : Window
 
             if (result == true)
             {
-                // Update main window with new settings
-                if (!string.IsNullOrEmpty(folderSettingsWindow.FolderPathTextBox.Text))
+                // Update ViewModel with new folder - UI will auto-update via binding
+                if (!string.IsNullOrEmpty(folderSettingsWindow.FolderPathTextBox.Text) && _viewModel != null)
                 {
-                    FolderPathText.Text = folderSettingsWindow.FolderPathTextBox.Text;
-
-                    // Update ViewModel if available
-                    if (_viewModel != null)
+                    _viewModel.MonitoredFolders.Add(new MonitoredFolder
                     {
-                        _viewModel.MonitoredFolders.Add(new MonitoredFolder
-                        {
-                            FolderPath = folderSettingsWindow.FolderPathTextBox.Text,
-                            FilePattern = folderSettingsWindow.FilePatternTextBox.Text,
-                            IncludeSubfolders = folderSettingsWindow.IncludeSubfoldersCheckBox.IsChecked == true,
-                            PostPrintAction = folderSettingsWindow.DeleteAfterPrintingCheckBox.IsChecked == true
-                                                ? PostPrintAction.DeleteFile
-                                                : PostPrintAction.KeepFile,
-                            IsActive = true,
-                            CreatedAt = DateTime.Now
-                        });
-                    }
+                        FolderPath = folderSettingsWindow.FolderPathTextBox.Text,
+                        FilePattern = folderSettingsWindow.FilePatternTextBox.Text,
+                        IncludeSubfolders = folderSettingsWindow.IncludeSubfoldersCheckBox.IsChecked == true,
+                        PostPrintAction = folderSettingsWindow.DeleteAfterPrintingCheckBox.IsChecked == true
+                                            ? PostPrintAction.DeleteFile
+                                            : PostPrintAction.KeepFile,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now
+                    });
+                    
+                    // Notify that the folder list changed
+                    _viewModel.NotifyPropertyChanged(nameof(_viewModel.FirstMonitoredFolder));
                 }
-
-                LoadFolderSettings();
                 _logger.LogInformation("Folder settings updated successfully");
             }
         }
@@ -191,47 +247,6 @@ public partial class MainWindow : Window
 
             MessageBox.Show($"Failed to open folder settings: {ex.Message}", "Error",
                           MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private void LicenseActivation_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to open license activation window");
-
-            MessageBox.Show($"Failed to open license activation: {ex.Message}", "Error",
-                          MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private void LoadPrinterSettings()
-    {
-        try
-        {
-            PrinterNameText.Text = _viewModel.DefaultPrinter ?? "No printer selected";
-            PaperSizeText.Text = _viewModel?.PaperSize ?? "A4";
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to load printer settings");
-        }
-    }
-
-    private void LoadFolderSettings()
-    {
-        try
-        {
-            var firstFolder = _viewModel.MonitoredFolders.FirstOrDefault();
-            FolderPathText.Text = firstFolder?.FolderPath ?? "No folder selected";
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to load folder settings");
         }
     }
 }

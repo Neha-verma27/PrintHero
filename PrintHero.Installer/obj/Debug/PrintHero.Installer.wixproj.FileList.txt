@@ -1,0 +1,7 @@
+C:\Projects\PrintHero\PrintHero\PrintHero.Installer\bin\Debug\PrintHeroSetup.msi
+C:\Projects\PrintHero\PrintHero\PrintHero.Installer\bin\Debug\PrintHeroSetup.wixpdb
+obj\Debug\Product-Published.wixobj
+obj\Debug\PrintHero.Installer.wixproj.BindContentsFileListnull.txt
+obj\Debug\PrintHero.Installer.wixproj.BindOutputsFileListnull.txt
+obj\Debug\PrintHero.Installer.wixproj.BindBuiltOutputsFileListnull.txt
+obj\Debug\Product.wixobj

@@ -1,0 +1,2 @@
+C:\Projects\PrintHero\PrintHero\PrintHero.MSI\bin\Debug\PrintHero.msi
+C:\Projects\PrintHero\PrintHero\PrintHero.MSI\bin\Debug\PrintHero.wixpdb

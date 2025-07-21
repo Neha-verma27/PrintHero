@@ -12,9 +12,9 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    var builder = Host.CreateApplicationBuilder(args);
-
-    var host = builder.Build();
+    var host = new HostBuilder()
+        .UseSerilog()
+        .Build();
 
     await host.RunAsync();
 }

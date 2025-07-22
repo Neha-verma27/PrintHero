@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -35,14 +35,13 @@ public partial class App : System.Windows.Application
 
             try
             {
-                // Create host with services
+
                 _host = CreateHost();
                 await _host.StartAsync();
 
                 _logger = _host.Services.GetService<ILogger<App>>();
                 _logger?.LogInformation("Host started successfully");
 
-                // Create main window
                 var mainWindow = CreateMainWindow();
 
                 var args = Environment.GetCommandLineArgs();
@@ -57,7 +56,6 @@ public partial class App : System.Windows.Application
                     mainWindow.Show();
                 }
 
-                // Set up auto-start functionality
                 SetupAutoStart();
 
                 base.OnStartup(e);

@@ -143,7 +143,6 @@ public class JsonConfigService
         }
     }
 
-    // Settings methods
     public async Task<Dictionary<string, string>> GetSettingsAsync()
     {
         try

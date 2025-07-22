@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using Microsoft.Extensions.Logging;
 using PrintHero.Core.Interfaces;
 using PrintHero.Core.Models;
@@ -128,7 +128,6 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
 
             _watchers[folder.FolderPath] = watcher;
 
-            // Process existing files in the folder
             await ProcessExistingFiles(folder);
 
             _logger.LogInformation($"Started monitoring folder: {folder.FolderPath} with pattern: {folder.FilePattern}");
@@ -164,7 +163,7 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
 
     private async Task OnFileCreated(FileSystemEventArgs e, MonitoredFolder folder)
     {
-        // Add a small delay to ensure file is completely written
+
         await Task.Delay(1000);
         await ProcessFile(e.FullPath, folder);
     }
@@ -173,14 +172,13 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
     {
         try
         {
-            // Check if file exists
+
             if (!File.Exists(filePath))
             {
                 _logger.LogWarning($"File no longer exists: {filePath}");
                 return;
             }
 
-            // Check file type against pattern
             if (!IsFileMatchingPattern(filePath, folder.FilePattern))
             {
                 _logger.LogDebug($"File does not match pattern {folder.FilePattern}: {filePath}");
@@ -244,24 +242,21 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
     {
         try
         {
-            // Set default destination folder if not provided
+
             if (string.IsNullOrEmpty(destinationFolder))
             {
                 destinationFolder = Path.Combine(Path.GetDirectoryName(sourceFilePath), "Printed");
             }
 
-            // Create destination directory if it doesn't exist
             if (!Directory.Exists(destinationFolder))
             {
                 Directory.CreateDirectory(destinationFolder);
                 _logger.LogInformation($"Created directory: {destinationFolder}");
             }
 
-            // Get the file name
             string fileName = Path.GetFileName(sourceFilePath);
             string destinationPath = Path.Combine(destinationFolder, fileName);
 
-            // Handle file name conflicts
             destinationPath = GetUniqueFileName(destinationPath);
 
             // Move the file
@@ -368,8 +363,7 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
         try
         {
             var fileName = Path.GetFileName(filePath);
-            
-            // Handle common patterns
+
             if (pattern == "*.*")
                 return true;
                 

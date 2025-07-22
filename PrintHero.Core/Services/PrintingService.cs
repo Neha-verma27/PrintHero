@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Drawing.Printing;
 using System.Windows.Forms;
 using Microsoft.Extensions.Logging;
@@ -56,7 +56,6 @@ public class PrintingService : IPrintingService
                 return false;
             }
 
-            // Create print job record
             printJob = await CreatePrintJobAsync(filePath);
             
             var fileExtension = Path.GetExtension(filePath).ToLowerInvariant();
@@ -131,7 +130,6 @@ public class PrintingService : IPrintingService
                 return false;
             }
 
-            // Validate printer is available and online
             if (string.IsNullOrEmpty(_defaultPrinter))
             {
                 _logger.LogError("No printer configured");
@@ -150,7 +148,6 @@ public class PrintingService : IPrintingService
                 return false;
             }
 
-            // Validate PDF file
             using var document = PdfDocument.Load(pdfPath);
             if (document.PageCount == 0)
             {
@@ -217,7 +214,6 @@ public class PrintingService : IPrintingService
                 return false;
             }
 
-            // Additional verification: check if printer queue processed the job
             if (!await VerifyPrintJobProcessed(_defaultPrinter))
             {
                 _logger.LogWarning($"Could not verify print job was processed by printer: {_defaultPrinter}");
@@ -238,11 +234,10 @@ public class PrintingService : IPrintingService
     {
         try
         {
-            // Get the directory of the source file
+
             string sourceDirectory = Path.GetDirectoryName(sourceFilePath) ?? string.Empty;
             string printedFolder = Path.Combine(sourceDirectory, "Printed");
 
-            // Create printed directory if it doesn't exist (no date subfolders)
             if (!Directory.Exists(printedFolder))
             {
                 Directory.CreateDirectory(printedFolder);
@@ -252,7 +247,6 @@ public class PrintingService : IPrintingService
             string fileName = Path.GetFileName(sourceFilePath);
             string destinationPath = Path.Combine(printedFolder, fileName);
 
-            // Handle filename conflicts
             destinationPath = GetUniqueFileName(destinationPath);
 
             // Move the file
@@ -293,8 +287,7 @@ public class PrintingService : IPrintingService
         try
         {
             await UpdatePrintJobAsync(printJob, PrintJobStatus.Printing);
-            
-            // Check printer status before printing
+
             if (!IsPrinterOnline(_defaultPrinter))
             {
                 var errorMsg = $"Printer is offline, cannot print document: {_defaultPrinter}";
@@ -350,8 +343,7 @@ public class PrintingService : IPrintingService
         try
         {
             await UpdatePrintJobAsync(printJob, PrintJobStatus.Printing);
-            
-            // Check printer status before printing
+
             if (!IsPrinterOnline(_defaultPrinter))
             {
                 var errorMsg = $"Printer is offline, cannot print image: {_defaultPrinter}";
@@ -448,7 +440,7 @@ public class PrintingService : IPrintingService
             {
                 if (string.Equals(printer, printerName, StringComparison.OrdinalIgnoreCase))
                 {
-                    // Additional check for printer status
+
                     var printerSettings = new PrinterSettings();
                     printerSettings.PrinterName = printerName;
                     return printerSettings.IsValid;
@@ -476,7 +468,6 @@ public class PrintingService : IPrintingService
                 return false;
             }
 
-            // Check if printer is installed and accessible
             if (!printerSettings.CanDuplex && !printerSettings.IsPlotter)
             {
                 // Basic printer status check via WMI
@@ -507,14 +498,12 @@ public class PrintingService : IPrintingService
                 var printerStatus = printer["PrinterStatus"];
                 var workOffline = printer["WorkOffline"];
 
-                // Check if printer is offline
                 if (workOffline != null && (bool)workOffline)
                 {
                     _logger.LogWarning($"Printer is set to work offline: {printerName}");
                     return false;
                 }
 
-                // Check printer state (0 = Idle, 1 = Paused, 2 = Error, 3 = Pending Deletion, etc.)
                 if (printerState != null)
                 {
                     var state = Convert.ToUInt32(printerState);
@@ -530,7 +519,6 @@ public class PrintingService : IPrintingService
                     }
                 }
 
-                // Check printer status (3 = Idle, 4 = Printing, 5 = Warmup, etc.)
                 if (printerStatus != null)
                 {
                     var status = Convert.ToUInt32(printerStatus);
@@ -625,7 +613,6 @@ public class PrintingService : IPrintingService
                 new SqliteParameter("@ProcessingStarted", printJob.ProcessingStarted?.ToString("yyyy-MM-dd HH:mm:ss")),
                 new SqliteParameter("@CreatedAt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
 
-            // Get the inserted ID
             try
             {
                 var getId = await _database.ExecuteScalarAsync<long?>("SELECT last_insert_rowid()");

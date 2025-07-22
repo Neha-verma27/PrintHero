@@ -15,7 +15,6 @@ namespace PrintHero.Uninstaller
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            // Check if running as administrator
             if (!IsRunningAsAdministrator())
             {
                 var result = MessageBox.Show(
@@ -112,19 +111,15 @@ namespace PrintHero.Uninstaller
 
             try
             {
-                // Stop PrintHero processes
+
                 success &= StopPrintHeroProcesses();
 
-                // Remove auto-start entries
                 success &= RemoveAutoStartEntries();
 
-                // Remove registry entries
                 success &= RemoveRegistryEntries();
 
-                // Remove shortcuts
                 success &= RemoveShortcuts();
 
-                // Remove application files
                 success &= RemoveApplicationFiles();
 
                 // Try to uninstall via MSI if available
@@ -278,7 +273,7 @@ namespace PrintHero.Uninstaller
                     {
                         try
                         {
-                            // Check if this MSI is related to PrintHero
+
                             var fileInfo = new FileInfo(msiFile);
                             if (IsPrintHeroMSI(msiFile))
                             {
@@ -380,7 +375,7 @@ namespace PrintHero.Uninstaller
 
             try
             {
-                // Remove PDF file association
+
                 string[] associationKeys = {
                     @"SOFTWARE\Classes\.pdf\OpenWithProgids",
                     @"SOFTWARE\Classes\Applications\PrintHero.UI.exe"
@@ -455,7 +450,6 @@ namespace PrintHero.Uninstaller
                 }
             }
 
-            // Start Menu shortcuts - check both user and common start menu
             string[] startMenuBasePaths = {
                 Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)
@@ -618,10 +612,9 @@ namespace PrintHero.Uninstaller
 
                 foreach (string uninstallKeyPath in uninstallKeys)
                 {
-                    // Check HKEY_LOCAL_MACHINE
+
                     success &= ProcessUninstallRegistry(Registry.LocalMachine, uninstallKeyPath);
-                    
-                    // Check HKEY_CURRENT_USER  
+
                     success &= ProcessUninstallRegistry(Registry.CurrentUser, uninstallKeyPath);
                 }
             }

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Windows;
 using Microsoft.Extensions.Logging;
 
@@ -29,14 +29,36 @@ public partial class FolderSettingsWindow : Window
         LoadCurrentSettings();
     }
 
+    public void LoadExistingSettings(string? folderPath, string filePattern, bool includeSubfolders, bool deleteAfterPrint)
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(folderPath))
+                FolderPathTextBox.Text = folderPath;
+            if (!string.IsNullOrEmpty(filePattern))
+                FilePatternTextBox.Text = filePattern;
+            IncludeSubfoldersCheckBox.IsChecked = includeSubfolders;
+            DeleteAfterPrintingCheckBox.IsChecked = deleteAfterPrint;
+
+            _logger?.LogInformation($"Existing folder settings loaded - Path: {folderPath}, Pattern: {filePattern}");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to load existing folder settings");
+        }
+    }
+
     private void LoadCurrentSettings()
     {
         try
         {
-            FolderPathTextBox.Text = @"C:\PrintHero\Input";
-            FilePatternTextBox.Text = "*.pdf";
-            IncludeSubfoldersCheckBox.IsChecked = false;
-            //DeleteAfterPrintCheckBox.IsChecked = false;
+            // Set default values if no existing settings are loaded
+            if (string.IsNullOrEmpty(FolderPathTextBox.Text))
+                FolderPathTextBox.Text = @"C:\PrintHero\Input";
+            if (string.IsNullOrEmpty(FilePatternTextBox.Text))
+                FilePatternTextBox.Text = "*.pdf";
+            if (!IncludeSubfoldersCheckBox.IsChecked.HasValue)
+                IncludeSubfoldersCheckBox.IsChecked = false;
         }
         catch (Exception ex)
         {
@@ -72,7 +94,7 @@ public partial class FolderSettingsWindow : Window
     {
         try
         {
-            // Validate inputs
+
             if (string.IsNullOrWhiteSpace(FolderPathTextBox.Text))
             {
                 System.Windows.MessageBox.Show("Please select a folder to monitor.", "Validation Error",

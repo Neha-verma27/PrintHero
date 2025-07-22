@@ -1,4 +1,4 @@
-﻿using System.Drawing.Printing;
+using System.Drawing.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
@@ -54,26 +54,32 @@ namespace PrintHero.UI.Views
                 _availablePrinters.Clear();
                 PrinterComboBox.Items.Clear();
 
-                // Get all installed printers
                 foreach (string printerName in PrinterSettings.InstalledPrinters)
                 {
                     _availablePrinters.Add(printerName);
                     PrinterComboBox.Items.Add(printerName);
                 }
 
-                // Set default printer if available
                 if (_availablePrinters.Any())
                 {
-                    var defaultPrinter = new PrinterSettings().PrinterName;
-                    var defaultIndex = _availablePrinters.IndexOf(defaultPrinter);
-
-                    if (defaultIndex >= 0)
+                    // Apply pending settings if they exist, otherwise use system default
+                    if (!string.IsNullOrEmpty(_pendingPrinter))
                     {
-                        PrinterComboBox.SelectedIndex = defaultIndex;
+                        ApplyPendingSettings();
                     }
                     else
                     {
-                        PrinterComboBox.SelectedIndex = 0;
+                        var defaultPrinter = new PrinterSettings().PrinterName;
+                        var defaultIndex = _availablePrinters.IndexOf(defaultPrinter);
+
+                        if (defaultIndex >= 0)
+                        {
+                            PrinterComboBox.SelectedIndex = defaultIndex;
+                        }
+                        else
+                        {
+                            PrinterComboBox.SelectedIndex = 0;
+                        }
                     }
 
                     UpdatePrinterStatus("Ready");
@@ -96,14 +102,115 @@ namespace PrintHero.UI.Views
             }
         }
 
+        private string? _pendingPrinter;
+        private string? _pendingPaperSize;
+        private string? _pendingOrientation;
+
+        public void LoadExistingSettings(string? defaultPrinter, string paperSize, string orientation)
+        {
+            try
+            {
+                // Store the settings to be applied after printers are loaded
+                _pendingPrinter = defaultPrinter;
+                _pendingPaperSize = paperSize;
+                _pendingOrientation = orientation;
+
+                _logger?.LogInformation($"Pending settings stored - Printer: {defaultPrinter}, Paper: {paperSize}, Orientation: {orientation}");
+
+                // Apply settings if printers are already loaded
+                if (PrinterComboBox.Items.Count > 0)
+                {
+                    ApplyPendingSettings();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to store existing settings");
+            }
+        }
+
+        private void ApplyPendingSettings()
+        {
+            try
+            {
+                // Load existing printer selection if available
+                if (!string.IsNullOrEmpty(_pendingPrinter) && PrinterComboBox.Items.Count > 0)
+                {
+                    for (int i = 0; i < PrinterComboBox.Items.Count; i++)
+                    {
+                        if (PrinterComboBox.Items[i].ToString() == _pendingPrinter)
+                        {
+                            PrinterComboBox.SelectedIndex = i;
+                            _logger?.LogInformation($"Selected printer: {_pendingPrinter} at index {i}");
+                            break;
+                        }
+                    }
+                }
+
+                // Load existing paper size
+                if (!string.IsNullOrEmpty(_pendingPaperSize))
+                {
+                    for (int i = 0; i < PaperSizeComboBox.Items.Count; i++)
+                    {
+                        if (PaperSizeComboBox.Items[i] is ComboBoxItem item && 
+                            item.Content.ToString()!.StartsWith(_pendingPaperSize, StringComparison.OrdinalIgnoreCase))
+                        {
+                            PaperSizeComboBox.SelectedIndex = i;
+                            _logger?.LogInformation($"Selected paper size: {_pendingPaperSize} at index {i}");
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    PaperSizeComboBox.SelectedIndex = 0; // Default to A4
+                }
+
+                // Load existing orientation
+                _logger?.LogInformation($"Attempting to set orientation: '{_pendingOrientation}' (Total items: {OrientationComboBox.Items.Count})");
+                if (!string.IsNullOrEmpty(_pendingOrientation))
+                {
+                    if (_pendingOrientation.Equals("Portrait", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OrientationComboBox.SelectedIndex = 0;
+                        _logger?.LogInformation($"Selected orientation: Portrait (index 0), Current selection: {OrientationComboBox.SelectedIndex}");
+                    }
+                    else if (_pendingOrientation.Equals("Landscape", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OrientationComboBox.SelectedIndex = 1;
+                        _logger?.LogInformation($"Selected orientation: Landscape (index 1), Current selection: {OrientationComboBox.SelectedIndex}");
+                    }
+                    else
+                    {
+                        _logger?.LogWarning($"Unknown orientation value: '{_pendingOrientation}', defaulting to Portrait");
+                        OrientationComboBox.SelectedIndex = 0;
+                    }
+                }
+                else
+                {
+                    OrientationComboBox.SelectedIndex = 0; // Default to Portrait
+                    _logger?.LogInformation("No pending orientation, defaulting to Portrait");
+                }
+
+                _logger?.LogInformation("Applied pending settings successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to apply pending settings");
+            }
+        }
+
         private void LoadCurrentSettings()
         {
             try
             {
-                PaperSizeComboBox.SelectedIndex = 0; // A4
-                OrientationComboBox.SelectedIndex = 0; // Portrait
+                // Set default values if no existing settings are loaded
+                if (PaperSizeComboBox.SelectedIndex == -1)
+                    PaperSizeComboBox.SelectedIndex = 0; // A4
+                if (OrientationComboBox.SelectedIndex == -1)
+                    OrientationComboBox.SelectedIndex = 0; // Portrait
 
-                _logger?.LogInformation("Current settings loaded");
+                _logger?.LogInformation("Current settings loaded with defaults");
             }
             catch (Exception ex)
             {
@@ -161,7 +268,6 @@ namespace PrintHero.UI.Views
                 string selectedPrinter = PrinterComboBox.SelectedItem.ToString()!;
                 _logger?.LogInformation($"Starting test print to: {selectedPrinter}");
 
-                // Create a simple test print
                 var printDoc = new PrintDocument();
                 printDoc.PrinterSettings.PrinterName = selectedPrinter;
 
@@ -200,7 +306,7 @@ namespace PrintHero.UI.Views
         {
             try
             {
-                // Validate settings
+
                 if (PrinterComboBox.SelectedItem == null)
                 {
                     MessageBox.Show("Please select a printer.", "Validation Error",
@@ -218,7 +324,7 @@ namespace PrintHero.UI.Views
                 if (OrientationComboBox.SelectedItem is ComboBoxItem orientationItem)
                 {
                     Orientation = orientationItem.Content.ToString()!;
-                    // Remove emoji from orientation text
+
                     if (Orientation.Contains("Portrait"))
                         Orientation = "Portrait";
                     else if (Orientation.Contains("Landscape"))

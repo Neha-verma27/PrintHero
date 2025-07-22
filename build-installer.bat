@@ -89,13 +89,103 @@ echo =====================================================
 echo ✓ Build completed successfully!
 echo =====================================================
 
+REM Determine which installer file was created
+set "INSTALLER_SOURCE="
+set "INSTALLER_NAME=PrintHeroSetup.msi"
 if exist "PrintHero.Installer\bin\Release\PrintHeroSetup.msi" (
-    echo Installer: PrintHero.Installer\bin\Release\PrintHeroSetup.msi
+    set "INSTALLER_SOURCE=PrintHero.Installer\bin\Release\PrintHeroSetup.msi"
+    echo Installer found: PrintHero.Installer\bin\Release\PrintHeroSetup.msi
 ) else if exist "PrintHero.Installer\bin\PrintHero-Setup.msi" (
-    echo Installer: PrintHero.Installer\bin\PrintHero-Setup.msi
+    set "INSTALLER_SOURCE=PrintHero.Installer\bin\PrintHero-Setup.msi"
+    set "INSTALLER_NAME=PrintHero-Setup.msi"
+    echo Installer found: PrintHero.Installer\bin\PrintHero-Setup.msi
 ) else (
     echo WARNING: Installer file not found in expected location
+    goto :end
 )
 
+REM Update Client Package
+echo.
+echo Step 5: Updating Client Package...
+if not exist "PrintHero-Client-Package" (
+    echo Creating PrintHero-Client-Package directory...
+    mkdir "PrintHero-Client-Package"
+)
+
+REM Copy the installer to client package
+echo Copying %INSTALLER_NAME% to client package...
+copy "%INSTALLER_SOURCE%" "PrintHero-Client-Package\PrintHeroSetup.msi" >nul
+if %ERRORLEVEL% equ 0 (
+    echo ✓ Installer copied to client package
+) else (
+    echo ERROR: Failed to copy installer to client package
+)
+
+REM Update README.txt with current date and build info
+echo Updating README.txt...
+(
+echo PrintHero - Automatic PDF Printer
+echo ==================================
+echo.
+echo This package contains:
+echo - PrintHeroSetup.msi ^(Installer^)
+echo - INSTALLATION.txt ^(Setup instructions^)
+echo.
+echo Package built on: %DATE% at %TIME%
+echo.
+echo To install PrintHero, please read INSTALLATION.txt first.
+echo.
+) > "PrintHero-Client-Package\README.txt"
+echo ✓ README.txt updated
+
+REM Get file size for installer
+for %%A in ("%INSTALLER_SOURCE%") do set "INSTALLER_SIZE=%%~zA"
+set /a "INSTALLER_SIZE_MB=%INSTALLER_SIZE% / 1048576"
+
+REM Update INSTALLATION.txt with current info
+echo Updating INSTALLATION.txt...
+(
+echo PrintHero v1.0 - Installation Guide
+echo ======================================
+echo.
+echo Package Information:
+echo - Build Date: %DATE% %TIME%
+echo - Installer Size: %INSTALLER_SIZE_MB% MB
+echo - File: PrintHeroSetup.msi
+echo.
+echo System Requirements:
+echo - Windows 10/11 ^(64-bit^)
+echo - .NET 8.0 Runtime ^(included in installer^)
+echo - Administrator privileges for installation
+echo.
+echo Installation Steps:
+echo 1. Right-click PrintHeroSetup.msi and select "Run as Administrator"
+echo 2. Follow the installation wizard
+echo 3. Launch PrintHero from Desktop shortcut or Start Menu
+echo 4. Configure your PDF monitoring folders in Settings
+echo.
+echo Features:
+echo - Automatic PDF printing from monitored folders
+echo - Desktop and Start Menu shortcuts
+echo - Auto-start with Windows
+echo - Complete dependency package ^(no additional downloads needed^)
+echo.
+echo Troubleshooting:
+echo - If Windows shows "Unrecognized app" warning, click "More info" then "Run anyway"
+echo - Ensure antivirus software is not blocking the installation
+echo - Contact support if you encounter issues
+echo.
+) > "PrintHero-Client-Package\INSTALLATION.txt"
+echo ✓ INSTALLATION.txt updated
+
+echo.
+echo =====================================================
+echo ✓ Client Package Updated Successfully!
+echo =====================================================
+echo Package Location: PrintHero-Client-Package\
+echo Installer: PrintHero-Client-Package\PrintHeroSetup.msi
+echo.
+
+:end
 echo Press any key to continue...
 pause >nul

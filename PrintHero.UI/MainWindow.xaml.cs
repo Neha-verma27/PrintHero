@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using Microsoft.Extensions.Logging;
 using PrintHero.Core.Models;
 using PrintHero.UI.ViewModels;
@@ -48,7 +48,7 @@ public partial class MainWindow : Window
                 // Ensure toggle always matches ViewModel state after initialization
                 if (PowerToggle.IsChecked != _viewModel.IsServiceRunning)
                 {
-                    _logger?.LogInformation("🔄 Syncing toggle state - ViewModel: {ViewModelState}, Toggle: {ToggleState}", 
+                    _logger?.LogInformation("?? Syncing toggle state - ViewModel: {ViewModelState}, Toggle: {ToggleState}", 
                         _viewModel.IsServiceRunning, PowerToggle.IsChecked);
                     PowerToggle.IsChecked = _viewModel.IsServiceRunning;
                 }
@@ -56,11 +56,11 @@ public partial class MainWindow : Window
                 // For the desired behavior, ensure service is always ON
                 if (_viewModel.IsServiceRunning)
                 {
-                    _logger?.LogInformation("✅ PrintHero is running and monitoring - Toggle is ON");
+                    _logger?.LogInformation("? PrintHero is running and monitoring - Toggle is ON");
                 }
                 else
                 {
-                    _logger?.LogWarning("⚠️ PrintHero service is not running - this may not be the desired state");
+                    _logger?.LogWarning("?? PrintHero service is not running - this may not be the desired state");
                 }
             }
         }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
@@ -76,8 +76,7 @@ public partial class MainWindow : Window
                 _logger?.LogInformation("Waiting for ViewModel initialization...");
                 await _viewModel.InitializationTask;
                 _logger?.LogInformation("ViewModel initialization completed, refreshing UI...");
-                
-                // Update UI with ViewModel data
+
                 await RefreshUIFromViewModel();
             }
         }
@@ -168,23 +167,28 @@ public partial class MainWindow : Window
         }
     }
 
-    private void PrinterSettings_Click(object sender, RoutedEventArgs e)
+    private async void PrinterSettings_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            var printerSettingsWindow = new PrinterSettingsWindow();
+            var printerSettingsWindow = new PrinterSettingsWindow(_logger);
+            
+            // Pass current settings to the window
+            if (_viewModel != null)
+            {
+                printerSettingsWindow.LoadExistingSettings(_viewModel.DefaultPrinter, _viewModel.PaperSize, _viewModel.Orientation);
+            }
+            
             printerSettingsWindow.Owner = this;
             var result = printerSettingsWindow.ShowDialog();
 
             if (result == true)
             {
-                // Update ViewModel with new settings - UI will auto-update via binding
                 if (!string.IsNullOrEmpty(printerSettingsWindow.SelectedPrinter) && _viewModel != null)
                 {
                     _viewModel.DefaultPrinter = printerSettingsWindow.SelectedPrinter;
                 }
 
-                // Update paper size
                 if (!string.IsNullOrEmpty(printerSettingsWindow.PaperSize) && _viewModel != null)
                 {
                     string paperSize = printerSettingsWindow.PaperSize;
@@ -194,36 +198,57 @@ public partial class MainWindow : Window
                     }
                     _viewModel.PaperSize = paperSize;
                 }
-                _logger.LogInformation($"Printer settings updated Printer: {printerSettingsWindow.SelectedPrinter}, Paper: {printerSettingsWindow.PaperSize}, Orientation: {printerSettingsWindow.Orientation}");
+                
+                if (!string.IsNullOrEmpty(printerSettingsWindow.Orientation) && _viewModel != null)
+                {
+                    _viewModel.Orientation = printerSettingsWindow.Orientation;
+                }
+                
+                // Save the settings to persistent storage
+                await _viewModel.SaveSettingsAsync();
+                
+                _logger?.LogInformation($"Printer settings updated and saved - Printer: {printerSettingsWindow.SelectedPrinter}, Paper: {printerSettingsWindow.PaperSize}, Orientation: {printerSettingsWindow.Orientation}");
+                _logger?.LogInformation($"ViewModel now has - Printer: {_viewModel.DefaultPrinter}, Paper: {_viewModel.PaperSize}, Orientation: {_viewModel.Orientation}");
 
-                MessageBox.Show("Printer settings have been updated successfully!",
+                MessageBox.Show("Printer settings have been updated and saved successfully!",
                     "Settings Updated", MessageBoxButton.OK, MessageBoxImage.Information);
-
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to open printer settings window");
-
+            _logger?.LogError(ex, "Failed to open printer settings window");
             MessageBox.Show($"Failed to open printer settings: {ex.Message}", "Error",
                           MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
-    private void HotFolder_Click(object sender, RoutedEventArgs e)
+    private async void HotFolder_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            var folderSettingsWindow = new FolderSettingsWindow();
+            var folderSettingsWindow = new FolderSettingsWindow(_logger);
+            
+            // Load current hot folder settings if available
+            if (_viewModel != null && _viewModel.MonitoredFolders.Any())
+            {
+                var currentFolder = _viewModel.MonitoredFolders.First();
+                folderSettingsWindow.LoadExistingSettings(
+                    currentFolder.FolderPath,
+                    currentFolder.FilePattern,
+                    currentFolder.IncludeSubfolders,
+                    currentFolder.PostPrintAction == PostPrintAction.DeleteFile
+                );
+                _logger?.LogInformation("Loaded current folder settings: {FolderPath}", currentFolder.FolderPath);
+            }
+            
             folderSettingsWindow.Owner = this;
             var result = folderSettingsWindow.ShowDialog();
 
-            if (result == true)
+            if (result == true && _viewModel != null)
             {
-                // Update ViewModel with new folder - UI will auto-update via binding
-                if (!string.IsNullOrEmpty(folderSettingsWindow.FolderPathTextBox.Text) && _viewModel != null)
+                if (!string.IsNullOrEmpty(folderSettingsWindow.FolderPathTextBox.Text))
                 {
-                    _viewModel.MonitoredFolders.Add(new MonitoredFolder
+                    var updatedFolder = new MonitoredFolder
                     {
                         FolderPath = folderSettingsWindow.FolderPathTextBox.Text,
                         FilePattern = folderSettingsWindow.FilePatternTextBox.Text,
@@ -233,20 +258,79 @@ public partial class MainWindow : Window
                                             : PostPrintAction.KeepFile,
                         IsActive = true,
                         CreatedAt = DateTime.Now
-                    });
+                    };
+
+                    // Update existing folder or add new one
+                    if (_viewModel.MonitoredFolders.Any())
+                    {
+                        // Update the first (current) folder
+                        var existingFolder = _viewModel.MonitoredFolders.First();
+                        updatedFolder.Id = existingFolder.Id; // Preserve ID
+                        updatedFolder.CreatedAt = existingFolder.CreatedAt; // Preserve creation date
+                        
+                        // Remove old and add updated
+                        _viewModel.MonitoredFolders.Clear();
+                        _viewModel.MonitoredFolders.Add(updatedFolder);
+                        
+                        _logger?.LogInformation("Updated existing folder: {OldPath} -> {NewPath}", 
+                            existingFolder.FolderPath, updatedFolder.FolderPath);
+                    }
+                    else
+                    {
+                        // Add as new folder
+                        _viewModel.MonitoredFolders.Add(updatedFolder);
+                        _logger?.LogInformation("Added new folder: {FolderPath}", updatedFolder.FolderPath);
+                    }
                     
-                    // Notify that the folder list changed
+                    // Force save the complete settings
+                    await _viewModel.SaveSettingsAsync();
+                    
+                    // Force refresh the UI to show the updated folder
                     _viewModel.NotifyPropertyChanged(nameof(_viewModel.FirstMonitoredFolder));
+                    
+                    // Note: The monitoring service will automatically pick up the updated folder settings
+                    // from the MonitoredFolders collection - no restart needed
+                    _logger?.LogInformation("Hot folder settings updated - monitoring service will use new settings");
+                    
+                    // Log the current state for debugging
+                    _logger?.LogInformation("Hot folder settings updated. Now monitoring: {FirstFolder}", 
+                        _viewModel.FirstMonitoredFolder);
+                    
+                    MessageBox.Show($"Hot folder settings have been updated successfully!\n\nNow monitoring: {_viewModel.FirstMonitoredFolder}\nFile pattern: {updatedFolder.FilePattern}", 
+                        "Settings Updated", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
-                _logger.LogInformation("Folder settings updated successfully");
+                else
+                {
+                    MessageBox.Show("Please specify a valid folder path.", "Invalid Input",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to open folder settings window");
-
-            MessageBox.Show($"Failed to open folder settings: {ex.Message}", "Error",
+            _logger?.LogError(ex, "Failed to save hot folder settings");
+            MessageBox.Show($"Failed to save folder settings: {ex.Message}", "Error",
                           MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private async Task RestartMonitoringServiceAsync()
+    {
+        try
+        {
+            if (_viewModel?.IsServiceRunning == true)
+            {
+                _logger?.LogInformation("Restarting monitoring service in background to update folder settings");
+                
+                // Since we just updated the MonitoredFolders collection, the service will automatically
+                // pick up the new settings on the next file monitoring cycle. 
+                // No need to restart - just save settings and let the service continue running.
+                _logger?.LogInformation("Folder settings updated - monitoring service will use new settings");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to update monitoring service settings");
         }
     }
 }

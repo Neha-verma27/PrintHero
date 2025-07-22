@@ -13,14 +13,14 @@ public class SqliteDatabaseService : IDisposable
     public SqliteDatabaseService(ILogger<SqliteDatabaseService> logger)
     {
         _logger = logger;
-        
+
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var dbDirectory = Path.Combine(appDataPath, "PrintHero");
         Directory.CreateDirectory(dbDirectory);
-        
+
         var dbPath = Path.Combine(dbDirectory, "printhero.db");
         _connectionString = $"Data Source={dbPath}";
-        
+
         InitializeDatabase();
     }
 
@@ -32,8 +32,8 @@ public class SqliteDatabaseService : IDisposable
             connection.Open();
 
             CreateTables(connection);
-            
-            _logger.LogInformation("SQLite database initialized at: {DatabasePath}", 
+
+            _logger.LogInformation("SQLite database initialized at: {DatabasePath}",
                 new SqliteConnectionStringBuilder(_connectionString).DataSource);
         }
         catch (Exception ex)
@@ -96,12 +96,11 @@ public class SqliteDatabaseService : IDisposable
         ExecuteNonQuery(connection, createAppSettingsTable);
         ExecuteNonQuery(connection, createMonitoredFoldersTable);
 
-        // Create indexes for performance
         CreateIndexes(connection);
-        
+
         // Insert default settings
         InsertDefaultSettings(connection);
-        
+
     }
 
     private void CreateIndexes(SqliteConnection connection)
@@ -136,9 +135,9 @@ public class SqliteDatabaseService : IDisposable
 
         foreach (var (category, key, value, dataType, description) in defaultSettings)
         {
-            var sql = @"INSERT OR IGNORE INTO AppSettings (Category, Key, Value, DataType, Description) 
+            var sql = @"INSERT OR IGNORE INTO AppSettings (Category, Key, Value, DataType, Description)
                        VALUES (@Category, @Key, @Value, @DataType, @Description)";
-            
+
             ExecuteNonQuery(connection, sql,
                 new SqliteParameter("@Category", category),
                 new SqliteParameter("@Key", key),
@@ -181,16 +180,16 @@ public class SqliteDatabaseService : IDisposable
             using var connection = GetConnection();
             connection.Open();
             using var command = new SqliteCommand(sql, connection);
-            
+
             if (parameters != null)
             {
                 command.Parameters.AddRange(parameters);
             }
-            
+
             var result = command.ExecuteScalar();
             if (result == null || result == DBNull.Value)
                 return default(T);
-            
+
             return (T)Convert.ChangeType(result, typeof(T));
         }
     }
@@ -198,25 +197,25 @@ public class SqliteDatabaseService : IDisposable
     public List<T> ExecuteQuery<T>(string sql, Func<SqliteDataReader, T> mapper, params SqliteParameter[] parameters)
     {
         var results = new List<T>();
-        
+
         lock (_lockObject)
         {
             using var connection = GetConnection();
             connection.Open();
             using var command = new SqliteCommand(sql, connection);
-            
+
             if (parameters != null)
             {
                 command.Parameters.AddRange(parameters);
             }
-            
+
             using var reader = command.ExecuteReader();
             while (reader.Read())
             {
                 results.Add(mapper(reader));
             }
         }
-        
+
         return results;
     }
 
@@ -225,38 +224,38 @@ public class SqliteDatabaseService : IDisposable
         using var connection = GetConnection();
         await connection.OpenAsync();
         using var command = new SqliteCommand(sql, connection);
-        
+
         if (parameters != null)
         {
             command.Parameters.AddRange(parameters);
         }
-        
+
         var result = await command.ExecuteScalarAsync();
         if (result == null || result == DBNull.Value)
             return default(T);
-        
+
         return (T)Convert.ChangeType(result, typeof(T));
     }
 
     public async Task<List<T>> ExecuteQueryAsync<T>(string sql, Func<SqliteDataReader, T> mapper, params SqliteParameter[] parameters)
     {
         var results = new List<T>();
-        
+
         using var connection = GetConnection();
         await connection.OpenAsync();
         using var command = new SqliteCommand(sql, connection);
-        
+
         if (parameters != null)
         {
             command.Parameters.AddRange(parameters);
         }
-        
+
         using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
             results.Add(mapper(reader));
         }
-        
+
         return results;
     }
 
@@ -265,12 +264,12 @@ public class SqliteDatabaseService : IDisposable
         using var connection = GetConnection();
         await connection.OpenAsync();
         using var command = new SqliteCommand(sql, connection);
-        
+
         if (parameters != null)
         {
             command.Parameters.AddRange(parameters);
         }
-        
+
         await command.ExecuteNonQueryAsync();
     }
 

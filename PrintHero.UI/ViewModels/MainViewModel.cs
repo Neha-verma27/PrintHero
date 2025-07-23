@@ -260,23 +260,23 @@ namespace PrintHero.UI.ViewModels
                 var today = DateTime.Today;
                 var tomorrow = today.AddDays(1);
 
-                // Query completed print jobs for today
-                var todayCompletedJobs = await _databaseService.ExecuteScalarAsync<int?>(
+                // Query completed print jobs for today - cast to int to avoid type issues
+                var todayCompletedJobs = await _databaseService.ExecuteScalarAsync<long>(
                     @"SELECT COUNT(*) FROM PrintJobs 
                       WHERE Status = 2 
                       AND DATE(CreatedAt) = DATE(@Today)",
                     new Microsoft.Data.Sqlite.SqliteParameter("@Today", today.ToString("yyyy-MM-dd")));
 
-                FilesProcessedToday = todayCompletedJobs ?? 0;
+                FilesProcessedToday = (int)todayCompletedJobs;
 
-                // Query failed print jobs for today
-                var todayFailedJobs = await _databaseService.ExecuteScalarAsync<int?>(
+                // Query failed print jobs for today - cast to int to avoid type issues
+                var todayFailedJobs = await _databaseService.ExecuteScalarAsync<long>(
                     @"SELECT COUNT(*) FROM PrintJobs 
                       WHERE Status = 3 
                       AND DATE(CreatedAt) = DATE(@Today)",
                     new Microsoft.Data.Sqlite.SqliteParameter("@Today", today.ToString("yyyy-MM-dd")));
 
-                PrintingErrorsToday = todayFailedJobs ?? 0;
+                PrintingErrorsToday = (int)todayFailedJobs;
 
                 _logger?.LogInformation("Loaded daily statistics: {ProcessedCount} processed, {ErrorCount} errors", 
                     FilesProcessedToday, PrintingErrorsToday);
@@ -359,9 +359,19 @@ namespace PrintHero.UI.ViewModels
                     return;
                 }
 
-                _logger?.LogInformation("Starting file monitoring with {Count} folders, DefaultPrinter: {Printer}", 
-                    MonitoredFolders.Count, DefaultPrinter);
-                await _fileMonitoringService.StartMonitoringAsync(MonitoredFolders);
+                // Only monitor the first (currently selected) folder
+                var currentFolder = MonitoredFolders.FirstOrDefault();
+                if (currentFolder != null)
+                {
+                    _logger?.LogInformation("Starting file monitoring for selected folder: {FolderPath}, DefaultPrinter: {Printer}", 
+                        currentFolder.FolderPath, DefaultPrinter);
+                    await _fileMonitoringService.StartMonitoringAsync(new[] { currentFolder });
+                }
+                else
+                {
+                    _logger?.LogWarning("No folder selected to monitor");
+                    return;
+                }
                 IsServiceRunning = true;
 
                 await SaveSettingsAsync();
@@ -402,29 +412,39 @@ namespace PrintHero.UI.ViewModels
             }
         }
 
-        private async void OnFileProcessed(object? sender, FileProcessedEventArgs e)
+        private void OnFileProcessed(object? sender, FileProcessedEventArgs e)
         {
-            try
+            // Marshal to UI thread for proper UI updates
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(async () =>
             {
-                if (e.Success)
+                try
                 {
-                    _logger?.LogInformation($"File processed successfully: {e.FilePath}");
-                }
-                else
-                {
-                    _logger?.LogError($"File processing failed: {e.FilePath} - {e.ErrorMessage}");
-                }
+                    if (e.Success)
+                    {
+                        _logger?.LogInformation($"File processed successfully: {e.FilePath}");
+                        // Increment processed count and force UI update
+                        _filesProcessedToday++;
+                        OnPropertyChanged(nameof(FilesProcessedToday));
+                    }
+                    else
+                    {
+                        _logger?.LogError($"File processing failed: {e.FilePath} - {e.ErrorMessage}");
+                        // Increment error count and force UI update
+                        _printingErrorsToday++;
+                        OnPropertyChanged(nameof(PrintingErrorsToday));
+                    }
 
-                // Refresh daily statistics from database to get accurate counts
-                await LoadDailyStatisticsAsync();
-                
-                // Save updated stats
-                await SaveSettingsAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error handling file processed event");
-            }
+                    // Don't call LoadDailyStatisticsAsync() here as it overwrites our counters
+                    // The counters are more reliable for real-time updates
+                    
+                    // Save updated stats
+                    await SaveSettingsAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Error handling file processed event");
+                }
+            }));
         }
 
 
@@ -486,7 +506,6 @@ namespace PrintHero.UI.ViewModels
                         FolderPath = defaultPrintingPath,
                         FilePattern = "*.pdf", // Default to PDF files
                         IncludeSubfolders = false,
-                        PostPrintAction = PostPrintAction.MoveToSubfolder,
                         IsActive = true,
                         CreatedAt = DateTime.Now
                     };

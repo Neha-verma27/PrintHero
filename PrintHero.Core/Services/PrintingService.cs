@@ -104,7 +104,6 @@ public class PrintingService : IPrintingService
             {
                 await UpdatePrintJobAsync(printJob, PrintJobStatus.Completed);
                 _logger.LogInformation("PDF printed successfully");
-                await MoveFileAfterPrint(filePath);
                 return true;
             }
 
@@ -214,11 +213,8 @@ public class PrintingService : IPrintingService
                 return false;
             }
 
-            if (!await VerifyPrintJobProcessed(_defaultPrinter))
-            {
-                _logger.LogWarning($"Could not verify print job was processed by printer: {_defaultPrinter}");
-                // Don't return false here as the job might still be successful
-            }
+            // Skip print job verification to avoid System.Management dependency
+            // The print job completion is verified by the EndPrint event above
 
             _logger.LogInformation($"PDF printed successfully: {pdfPath}");
             return true;
@@ -230,57 +226,7 @@ public class PrintingService : IPrintingService
         }
     }
 
-    private async Task MoveFileAfterPrint(string sourceFilePath)
-    {
-        try
-        {
 
-            string sourceDirectory = Path.GetDirectoryName(sourceFilePath) ?? string.Empty;
-            string printedFolder = Path.Combine(sourceDirectory, "Printed");
-
-            if (!Directory.Exists(printedFolder))
-            {
-                Directory.CreateDirectory(printedFolder);
-                _logger.LogInformation($"Created directory: {printedFolder}");
-            }
-
-            string fileName = Path.GetFileName(sourceFilePath);
-            string destinationPath = Path.Combine(printedFolder, fileName);
-
-            destinationPath = GetUniqueFileName(destinationPath);
-
-            // Move the file
-            File.Move(sourceFilePath, destinationPath);
-            _logger.LogInformation($"File moved from {sourceFilePath} to {destinationPath}");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Error moving file after print: {sourceFilePath}");
-        }
-    }
-
-    private string GetUniqueFileName(string filePath)
-    {
-        if (!File.Exists(filePath))
-            return filePath;
-
-        string directory = Path.GetDirectoryName(filePath) ?? string.Empty;
-        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
-        string extension = Path.GetExtension(filePath);
-
-        int counter = 1;
-        string newFilePath;
-
-        do
-        {
-            string newFileName = $"{fileNameWithoutExtension}_{counter:D3}{extension}";
-            newFilePath = Path.Combine(directory, newFileName);
-            counter++;
-        }
-        while (File.Exists(newFilePath));
-
-        return newFilePath;
-    }
 
     private async Task<bool> PrintDocumentAsync(string filePath, PrintJob? printJob = null)
     {
@@ -320,11 +266,7 @@ public class PrintingService : IPrintingService
                 return false;
             }
 
-            // Wait and verify print job
-            if (!await VerifyPrintJobProcessed(_defaultPrinter))
-            {
-                _logger.LogWarning($"Could not verify document print job was processed: {filePath}");
-            }
+            // Skip print job verification to avoid System.Management dependency
 
             await UpdatePrintJobAsync(printJob, PrintJobStatus.Completed);
             _logger.LogInformation($"Document printed: {filePath}");
@@ -414,11 +356,7 @@ public class PrintingService : IPrintingService
                 return false;
             }
 
-            // Verify print job
-            if (!await VerifyPrintJobProcessed(_defaultPrinter))
-            {
-                _logger.LogWarning($"Could not verify image print job was processed: {filePath}");
-            }
+            // Skip print job verification to avoid System.Management dependency
 
             await UpdatePrintJobAsync(printJob, PrintJobStatus.Completed);
             _logger.LogInformation($"Image printed: {filePath}");
@@ -468,12 +406,7 @@ public class PrintingService : IPrintingService
                 return false;
             }
 
-            if (!printerSettings.CanDuplex && !printerSettings.IsPlotter)
-            {
-                // Basic printer status check via WMI
-                return CheckPrinterStatusViaWMI(printerName);
-            }
-
+            // Skip WMI printer status check to avoid System.Management dependency
             return true; // Assume online if we can't determine status
         }
         catch (Exception ex)
@@ -483,104 +416,7 @@ public class PrintingService : IPrintingService
         }
     }
 
-    private bool CheckPrinterStatusViaWMI(string printerName)
-    {
-        try
-        {
-            using var searcher = new System.Management.ManagementObjectSearcher(
-                $"SELECT * FROM Win32_Printer WHERE Name = '{printerName.Replace("\\", "\\\\")}'");
-            
-            using var collection = searcher.Get();
-            
-            foreach (System.Management.ManagementObject printer in collection)
-            {
-                var printerState = printer["PrinterState"];
-                var printerStatus = printer["PrinterStatus"];
-                var workOffline = printer["WorkOffline"];
-
-                if (workOffline != null && (bool)workOffline)
-                {
-                    _logger.LogWarning($"Printer is set to work offline: {printerName}");
-                    return false;
-                }
-
-                if (printerState != null)
-                {
-                    var state = Convert.ToUInt32(printerState);
-                    if (state == 2) // Error state
-                    {
-                        _logger.LogWarning($"Printer is in error state: {printerName}");
-                        return false;
-                    }
-                    if (state == 1) // Paused state
-                    {
-                        _logger.LogWarning($"Printer is paused: {printerName}");
-                        return false;
-                    }
-                }
-
-                if (printerStatus != null)
-                {
-                    var status = Convert.ToUInt32(printerStatus);
-                    if (status == 2) // Unknown status might indicate offline
-                    {
-                        _logger.LogWarning($"Printer status unknown, might be offline: {printerName}");
-                        return false;
-                    }
-                }
-
-                return true; // Printer appears to be online
-            }
-
-            _logger.LogWarning($"Printer not found in WMI: {printerName}");
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Error checking printer status via WMI: {printerName}");
-            return true; // Assume online if we can't check
-        }
-    }
-
-    private async Task<bool> VerifyPrintJobProcessed(string printerName)
-    {
-        try
-        {
-            // Wait a moment for the job to appear in queue
-            await Task.Delay(1000);
-
-            using var searcher = new System.Management.ManagementObjectSearcher(
-                $"SELECT * FROM Win32_PrintJob WHERE Name LIKE '%{printerName.Replace("\\", "\\\\")}%'");
-            
-            using var collection = searcher.Get();
-            
-            var jobCount = collection.Count;
-            _logger.LogDebug($"Found {jobCount} print jobs in queue for printer: {printerName}");
-
-            // If there are jobs in queue, check their status
-            foreach (System.Management.ManagementObject job in collection)
-            {
-                var status = job["Status"];
-                var document = job["Document"];
-                
-                _logger.LogDebug($"Print job status: {status}, Document: {document}");
-                
-                // Job statuses: "Printing", "Spooling", "Printed", "Error", etc.
-                if (status != null && status.ToString().Contains("Error"))
-                {
-                    _logger.LogError($"Print job has error status: {status}");
-                    return false;
-                }
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Error verifying print job: {printerName}");
-            return true; // Don't fail the print if we can't verify
-        }
-    }
+    // WMI methods removed to avoid System.Management dependency
 
     private async Task<PrintJob?> CreatePrintJobAsync(string filePath)
     {

@@ -106,6 +106,27 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
         return Task.CompletedTask;
     }
 
+    public async Task RestartMonitoringAsync(IEnumerable<MonitoredFolder>? folders = null)
+    {
+        try
+        {
+            _logger.LogInformation("Restarting file monitoring service...");
+            
+            // Stop current monitoring
+            await StopMonitoringAsync();
+            
+            // Start with new folder settings
+            await StartMonitoringAsync(folders);
+            
+            _logger.LogInformation("File monitoring service restarted successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to restart monitoring service");
+            throw;
+        }
+    }
+
     private async Task StartMonitoringFolderAsync(MonitoredFolder folder)
     {
         try
@@ -198,14 +219,14 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
 
             if (success)
             {
-                // Only handle post-print action, remove duplicate file movement
-                await HandlePostPrintActionAsync(filePath, folder);
+                // Handle post-print action and get the final file path
+                var finalFilePath = await HandlePostPrintActionAsync(filePath, folder);
                 
                 _logger.LogInformation($"File processed successfully: {filePath}");
 
                 FileProcessed?.Invoke(this, new FileProcessedEventArgs
                 {
-                    FilePath = filePath,
+                    FilePath = finalFilePath ?? filePath,
                     Success = true,
                     ProcessedAt = DateTime.Now
                 });
@@ -319,42 +340,32 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
         return false;
     }
 
-    private async Task HandlePostPrintActionAsync(string filePath, MonitoredFolder folder)
+    private async Task<string?> HandlePostPrintActionAsync(string filePath, MonitoredFolder folder)
     {
         try
         {
-            switch (folder.PostPrintAction)
+            var printedFolder = Path.Combine(Path.GetDirectoryName(filePath)!, "Printed");
+
+            // Check if file still exists at original location
+            if (!File.Exists(filePath))
             {
-                case PostPrintAction.DeleteFile:
-                    File.Delete(filePath);
-                    _logger.LogInformation($"Deleted file after printing: {filePath}");
-                    break;
-
-                case PostPrintAction.MoveToSubfolder:
-                    var printedFolder = Path.Combine(Path.GetDirectoryName(filePath)!, "Printed");
-                    Directory.CreateDirectory(printedFolder);
-                    var newPath = Path.Combine(printedFolder, Path.GetFileName(filePath));
-                    File.Move(filePath, newPath);
-                    _logger.LogInformation($"Moved file to printed folder: {newPath}");
-                    break;
-
-                case PostPrintAction.MoveToCustomFolder:
-                    if (!string.IsNullOrEmpty(folder.CustomMoveFolder))
-                    {
-                        Directory.CreateDirectory(folder.CustomMoveFolder);
-                        var customPath = Path.Combine(folder.CustomMoveFolder, Path.GetFileName(filePath));
-                        File.Move(filePath, customPath);
-                        _logger.LogInformation($"Moved file to custom folder: {customPath}");
-                    }
-                    break;
-
-                case PostPrintAction.KeepFile:
-                    break;
+                _logger.LogWarning($"File not found for moving: {filePath}");
+                return filePath;
             }
+
+            // Create Printed folder and move file
+            Directory.CreateDirectory(printedFolder);
+            var newPath = Path.Combine(printedFolder, Path.GetFileName(filePath));
+            newPath = GetUniqueFileName(newPath);
+            File.Move(filePath, newPath);
+            _logger.LogInformation($"Moved file to printed folder: {newPath}");
+            return newPath;           
+            
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Failed to handle post-print action for file: {filePath}");
+            return filePath;
         }
     }
 

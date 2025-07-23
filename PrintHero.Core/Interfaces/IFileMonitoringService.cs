@@ -7,7 +7,7 @@ public interface IFileMonitoringService
     event EventHandler<FileProcessedEventArgs>? FileProcessed;
     Task StartMonitoringAsync(IEnumerable<MonitoredFolder>? folders);
     Task StopMonitoringAsync();
-    
+    Task RestartMonitoringAsync(IEnumerable<MonitoredFolder>? folders = null);
 }
 
 public class FileDetectedEventArgs : EventArgs

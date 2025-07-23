@@ -29,7 +29,7 @@ public partial class FolderSettingsWindow : Window
         LoadCurrentSettings();
     }
 
-    public void LoadExistingSettings(string? folderPath, string filePattern, bool includeSubfolders, bool deleteAfterPrint)
+    public void LoadExistingSettings(string? folderPath, string filePattern, bool includeSubfolders)
     {
         try
         {
@@ -37,8 +37,6 @@ public partial class FolderSettingsWindow : Window
                 FolderPathTextBox.Text = folderPath;
             if (!string.IsNullOrEmpty(filePattern))
                 FilePatternTextBox.Text = filePattern;
-            IncludeSubfoldersCheckBox.IsChecked = includeSubfolders;
-            DeleteAfterPrintingCheckBox.IsChecked = deleteAfterPrint;
 
             _logger?.LogInformation($"Existing folder settings loaded - Path: {folderPath}, Pattern: {filePattern}");
         }
@@ -57,8 +55,7 @@ public partial class FolderSettingsWindow : Window
                 FolderPathTextBox.Text = @"C:\PrintHero\Input";
             if (string.IsNullOrEmpty(FilePatternTextBox.Text))
                 FilePatternTextBox.Text = "*.pdf";
-            if (!IncludeSubfoldersCheckBox.IsChecked.HasValue)
-                IncludeSubfoldersCheckBox.IsChecked = false;
+           
         }
         catch (Exception ex)
         {

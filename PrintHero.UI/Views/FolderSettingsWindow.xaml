@@ -186,13 +186,7 @@
                                        Foreground="#333333"
                                        Margin="0,0,0,15"/>
 
-                            <CheckBox x:Name="IncludeSubfoldersCheckBox"
-                                      Content="Include Subfolders"
-                                      Style="{StaticResource CheckBoxStyle}"/>
-
-                            <CheckBox x:Name="DeleteAfterPrintingCheckBox"
-                                      Content="Delete files after printing"
-                                      Style="{StaticResource CheckBoxStyle}"/>
+                          
                         </StackPanel>
                     </Border>
 

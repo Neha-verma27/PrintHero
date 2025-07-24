@@ -14,8 +14,5 @@ public class AppSettings
 
 public enum PostPrintAction
 {
-    MoveToSubfolder,
-    MoveToCustomFolder,
-    DeleteFile,
-    KeepFile
+    MoveToSubfolder
 }

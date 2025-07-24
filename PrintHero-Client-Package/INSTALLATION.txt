@@ -1,0 +1,30 @@
+PrintHero v1.0 - Installation Guide
+======================================
+
+Package Information:
+- Build Date: Wed 23/07/2025  1:11:45.71
+- Installer Size: 10 MB
+- File: PrintHeroSetup.msi
+
+System Requirements:
+- Windows 10/11 (64-bit)
+- .NET 8.0 Runtime (included in installer)
+- Administrator privileges for installation
+
+Installation Steps:
+1. Right-click PrintHeroSetup.msi and select "Run as Administrator"
+2. Follow the installation wizard
+3. Launch PrintHero from Desktop shortcut or Start Menu
+4. Configure your PDF monitoring folders in Settings
+
+Features:
+- Automatic PDF printing from monitored folders
+- Desktop and Start Menu shortcuts
+- Auto-start with Windows
+- Complete dependency package (no additional downloads needed)
+
+Troubleshooting:
+- If Windows shows "Unrecognized app" warning, click "More info" then "Run anyway"
+- Ensure antivirus software is not blocking the installation
+- Contact support if you encounter issues
+

@@ -1,0 +1,14 @@
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\bin\Release\net8.0-windows\x64\pdfium.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\bin\Release\net8.0-windows\PrintHero.Core.deps.json
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\bin\Release\net8.0-windows\PrintHero.Core.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\bin\Release\net8.0-windows\PrintHero.Core.pdb
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\obj\Release\net8.0-windows\PrintHero.Core.csproj.AssemblyReference.cache
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\obj\Release\net8.0-windows\PrintHero.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\obj\Release\net8.0-windows\PrintHero.Core.AssemblyInfoInputs.cache
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\obj\Release\net8.0-windows\PrintHero.Core.AssemblyInfo.cs
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\obj\Release\net8.0-windows\PrintHero.Core.csproj.CoreCompileInputs.cache
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\obj\Release\net8.0-windows\PrintHero.Core.sourcelink.json
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\obj\Release\net8.0-windows\PrintHero.Core.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\obj\Release\net8.0-windows\refint\PrintHero.Core.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\obj\Release\net8.0-windows\PrintHero.Core.pdb
+C:\Projects\PrintHero\PrintHero\PrintHero.Core\obj\Release\net8.0-windows\ref\PrintHero.Core.dll

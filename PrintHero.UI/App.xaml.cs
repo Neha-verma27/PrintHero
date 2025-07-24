@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -8,7 +8,8 @@ using PrintHero.UI.ViewModels;
 using Serilog;
 using System.IO;
 using MessageBox = System.Windows.MessageBox;
-using PrintHero.Core.Data;
+using Microsoft.Win32;
+using System.Reflection;
 
 namespace PrintHero.UI;
 
@@ -34,14 +35,13 @@ public partial class App : System.Windows.Application
 
             try
             {
-                // Create host with services
+
                 _host = CreateHost();
                 await _host.StartAsync();
 
                 _logger = _host.Services.GetService<ILogger<App>>();
                 _logger?.LogInformation("Host started successfully");
 
-                // Create main window
                 var mainWindow = CreateMainWindow();
 
                 var args = Environment.GetCommandLineArgs();
@@ -56,18 +56,31 @@ public partial class App : System.Windows.Application
                     mainWindow.Show();
                 }
 
+                SetupAutoStart();
+
                 base.OnStartup(e);
                 Log.Information("PrintHero application started successfully");
             }
             catch (Exception hostEx)
             {
                 Log.Error(hostEx, "Failed to create host, running with basic functionality");
+                
+                var detailedError = $"Host Initialization Error:\n{hostEx.Message}\n\nStack Trace:\n{hostEx.StackTrace}";
+                
+                // Write error to a simple text file for debugging
+                try
+                {
+                    var errorLogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PrintHero", "startup-error.txt");
+                    Directory.CreateDirectory(Path.GetDirectoryName(errorLogPath));
+                    File.WriteAllText(errorLogPath, $"{DateTime.Now}: {detailedError}");
+                }
+                catch { }
 
                 // Fallback: create basic main window without DI
                 var fallbackWindow = new MainWindow();
                 fallbackWindow.Show();
 
-                MessageBox.Show($"Application started with limited functionality due to initialization error:\n{hostEx.Message}\n\nSome features may not work properly.",
+                MessageBox.Show($"Application started with limited functionality due to initialization error:\n{hostEx.Message}\n\nDetails logged to: %APPDATA%\\PrintHero\\startup-error.txt\n\nSome features may not work properly.",
                     "Startup Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
 
                 base.OnStartup(e);
@@ -88,9 +101,9 @@ public partial class App : System.Windows.Application
 
     private IHost CreateHost()
     {
-        return Host.CreateDefaultBuilder()
+        return new HostBuilder()
             .UseSerilog()
-            .ConfigureServices((context, services) =>
+            .ConfigureServices(services =>
             {
                 try
                 {
@@ -118,12 +131,22 @@ public partial class App : System.Windows.Application
     {
         try
         {
-            services.AddSingleton<DatabaseService>();
-            Log.Information("DatabaseService registered");
+            services.AddSingleton<PrintHero.Core.Data.SqliteDatabaseService>();
+            Log.Information("SqliteDatabaseService registered");
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Failed to register DatabaseService");
+            Log.Warning(ex, "Failed to register SqliteDatabaseService");
+        }
+
+        try
+        {
+            services.AddSingleton<JsonConfigService>();
+            Log.Information("JsonConfigService registered");
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to register JsonConfigService");
         }
 
         try
@@ -156,15 +179,7 @@ public partial class App : System.Windows.Application
             Log.Warning(ex, "Failed to register AppSettingsService");
         }
 
-        try
-        {
-            //services.AddSingleton<ILicensingService, LicensingService>();
-            Log.Information("LicensingService registered");
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Failed to register LicensingService");
-        }
+        // LicensingService removed - no licensing required
     }
 
     private void RegisterViewModels(IServiceCollection services)
@@ -177,13 +192,15 @@ public partial class App : System.Windows.Application
                 var printing = provider.GetService<IPrintingService>();
                 var settings = provider.GetService<IAppSettingsService>();
                 var logger = provider.GetService<ILogger<MainViewModel>>();
+                var jsonConfig = provider.GetService<JsonConfigService>();
+                var databaseService = provider.GetService<PrintHero.Core.Data.SqliteDatabaseService>();
 
-                Log.Information("Creating MainViewModel with services: FileMonitoring={FileMonitoring}, Printing={Printing}, Settings={Settings}",
-                    fileMonitoring != null, printing != null, settings != null);
+                Log.Information("Creating MainViewModel with services: FileMonitoring={FileMonitoring}, Printing={Printing}, Settings={Settings}, JsonConfig={JsonConfig}, Database={Database}",
+                    fileMonitoring != null, printing != null, settings != null, jsonConfig != null, databaseService != null);
 
                 if (fileMonitoring != null && printing != null && settings != null)
                 {
-                    return new MainViewModel(fileMonitoring, printing, settings, logger);
+                    return new MainViewModel(fileMonitoring, printing, settings, logger, jsonConfig, databaseService);
                 }
                 else
                 {
@@ -222,4 +239,89 @@ public partial class App : System.Windows.Application
             return new MainWindow();
         }
     }
+
+    private void SetupAutoStart()
+    {
+        try
+        {
+            const string appName = "PrintHero";
+            string exePath = Assembly.GetExecutingAssembly().Location;
+            string appPath = Path.ChangeExtension(exePath, ".exe");
+
+            using (RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
+            {
+                if (key != null)
+                {
+                    object? existingValue = key.GetValue(appName);
+                    
+                    if (existingValue == null || existingValue.ToString() != $"\"{appPath}\" -minimized")
+                    {
+                        key.SetValue(appName, $"\"{appPath}\" -minimized");
+                        Log.Information("Auto-start configured for PrintHero at: {AppPath}", appPath);
+                    }
+                    else
+                    {
+                        Log.Information("Auto-start already configured for PrintHero");
+                    }
+                }
+                else
+                {
+                    Log.Warning("Could not access Windows Run registry key");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to configure auto-start functionality");
+        }
+    }
+
+    public static void RemoveAutoStart()
+    {
+        try
+        {
+            const string appName = "PrintHero";
+            
+            using (RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
+            {
+                if (key != null)
+                {
+                    object? existingValue = key.GetValue(appName);
+                    if (existingValue != null)
+                    {
+                        key.DeleteValue(appName);
+                        Log.Information("Auto-start removed for PrintHero");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to remove auto-start functionality");
+        }
+    }
+
+    public static bool IsAutoStartEnabled()
+    {
+        try
+        {
+            const string appName = "PrintHero";
+            
+            using (RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", false))
+            {
+                if (key != null)
+                {
+                    object? existingValue = key.GetValue(appName);
+                    return existingValue != null;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to check auto-start status");
+        }
+        
+        return false;
+    }
+
 }

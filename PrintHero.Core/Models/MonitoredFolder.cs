@@ -9,6 +9,5 @@ public class MonitoredFolder
     public bool IncludeSubfolders { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime? LastActivity { get; set; }
-    public PostPrintAction PostPrintAction { get; set; } = PostPrintAction.MoveToSubfolder;
     public string? CustomMoveFolder { get; set; }
 }

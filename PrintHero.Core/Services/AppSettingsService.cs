@@ -16,7 +16,7 @@ public class AppSettingsService : IAppSettingsService
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var printHeroPath = Path.Combine(appDataPath, "PrintHero");
         Directory.CreateDirectory(printHeroPath);
-        _settingsPath = Path.Combine(printHeroPath, "appsettings.json");
+        _settingsPath = Path.Combine(printHeroPath, "settings.json");
     }
 
     public async Task<AppSettings> LoadSettingsAsync()

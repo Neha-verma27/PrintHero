@@ -356,7 +356,14 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
             // Create Printed folder and move file
             Directory.CreateDirectory(printedFolder);
             var newPath = Path.Combine(printedFolder, Path.GetFileName(filePath));
-            newPath = GetUniqueFileName(newPath);
+            
+            // If file already exists, delete it before moving (replace mode)
+            if (File.Exists(newPath))
+            {
+                File.Delete(newPath);
+                _logger.LogInformation($"Replaced existing file: {newPath}");
+            }
+            
             File.Move(filePath, newPath);
             _logger.LogInformation($"Moved file to printed folder: {newPath}");
             return newPath;           

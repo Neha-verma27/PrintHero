@@ -14,9 +14,20 @@ public class AppSettingsService : IAppSettingsService
     {
         _logger = logger;
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var printHeroPath = Path.Combine(appDataPath, "PrintHero");
+        
+        // Use different folder based on build configuration
+        string folderName;
+#if DEBUG
+        folderName = "PrintHero_Debug";
+#else
+        folderName = "PrintHero_Release";
+#endif
+        
+        var printHeroPath = Path.Combine(appDataPath, folderName);
         Directory.CreateDirectory(printHeroPath);
         _settingsPath = Path.Combine(printHeroPath, "settings.json");
+        
+        _logger.LogInformation("Using settings path: {SettingsPath}", _settingsPath);
     }
 
     public async Task<AppSettings> LoadSettingsAsync()

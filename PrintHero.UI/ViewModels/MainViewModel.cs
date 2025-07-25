@@ -29,6 +29,7 @@ namespace PrintHero.UI.ViewModels
         private string _paperSize = "A4";
         private string _orientation = "Portrait";
         private bool _autoStartService = true; // Always default to auto-start
+        private bool _isServiceEnabledByUser = true; // Remember user's toggle preference
 
         private int _printingErrorsToday;
 
@@ -183,6 +184,7 @@ namespace PrintHero.UI.ViewModels
                 PaperSize = settings.PaperSize;
                 Orientation = settings.Orientation;
                 _autoStartService = settings.AutoStartService;
+                _isServiceEnabledByUser = settings.IsServiceEnabledByUser;
 
                 if (string.IsNullOrEmpty(DefaultPrinter) || DefaultPrinter == "No printer selected")
                 {
@@ -194,15 +196,13 @@ namespace PrintHero.UI.ViewModels
                         _ = Task.Run(async () => await SaveSettingsAsync());
                     }
                 }
-                // Load daily statistics from database
-                await LoadDailyStatisticsAsync();
+                // Always load from settings first (for persistent in-memory counters)
+                FilesProcessedToday = ShouldResetDailyStats(settings) ? 0 : settings.FilesProcessedToday;
+                PrintingErrorsToday = ShouldResetDailyStats(settings) ? 0 : settings.PrintingErrors;
                 
-                // Fall back to settings if database is not available
-                if (_databaseService == null)
-                {
-                    FilesProcessedToday = ShouldResetDailyStats(settings) ? 0 : settings.FilesProcessedToday;
-                    PrintingErrorsToday = ShouldResetDailyStats(settings) ? 0 : settings.PrintingErrors;
-                }
+                // Log loaded statistics
+                _logger?.LogInformation("Loaded statistics from settings: {ProcessedCount} processed, {ErrorCount} errors", 
+                    FilesProcessedToday, PrintingErrorsToday);
 
                 // Load MonitoredFolders from JsonConfigService
                 MonitoredFolders.Clear();
@@ -304,6 +304,7 @@ namespace PrintHero.UI.ViewModels
                     PrintingErrors = PrintingErrorsToday,
                     MonitoredFolders = new List<MonitoredFolder>(), // Empty since we store these separately
                     AutoStartService = _autoStartService, // Use the stored auto-start preference, not current running state
+                    IsServiceEnabledByUser = _isServiceEnabledByUser, // Save user's toggle preference
                     LastResetDate = DateTime.Today
                 };
 
@@ -373,6 +374,7 @@ namespace PrintHero.UI.ViewModels
                     return;
                 }
                 IsServiceRunning = true;
+                _isServiceEnabledByUser = true; // User chose to enable the service
 
                 await SaveSettingsAsync();
                 _logger?.LogInformation("? File monitoring service started successfully - IsServiceRunning: {IsRunning}", IsServiceRunning);
@@ -402,6 +404,7 @@ namespace PrintHero.UI.ViewModels
 
                 await _fileMonitoringService.StopMonitoringAsync();
                 IsServiceRunning = false;
+                _isServiceEnabledByUser = false; // User chose to disable the service
 
                 await SaveSettingsAsync();
                 _logger?.LogInformation("File monitoring service stopped");
@@ -434,11 +437,11 @@ namespace PrintHero.UI.ViewModels
                         OnPropertyChanged(nameof(PrintingErrorsToday));
                     }
 
+                    // Save updated statistics to settings immediately
+                    await SaveSettingsAsync();
+
                     // Don't call LoadDailyStatisticsAsync() here as it overwrites our counters
                     // The counters are more reliable for real-time updates
-                    
-                    // Save updated stats
-                    await SaveSettingsAsync();
                 }
                 catch (Exception ex)
                 {
@@ -643,6 +646,14 @@ namespace PrintHero.UI.ViewModels
             try
             {
                 _logger?.LogInformation("PrintHero auto-start initiated...");
+                
+                // Check if user wants the service enabled based on their last toggle preference
+                if (!_isServiceEnabledByUser)
+                {
+                    _logger?.LogInformation("Service disabled by user preference - skipping auto-start");
+                    IsServiceRunning = false;
+                    return;
+                }
                 
                 // Brief delay to ensure all services are ready
                 await Task.Delay(300);

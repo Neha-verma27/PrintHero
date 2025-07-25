@@ -115,8 +115,8 @@ public partial class MainWindow : Window
     {
         try
         {
-            // Only start service if it's not already running (prevent circular calls)
-            if (_viewModel != null && !_viewModel.IsServiceRunning)
+            // Always execute start command to save user preference, regardless of current service state
+            if (_viewModel != null)
             {
                 if (_viewModel.StartServiceCommand != null)
                 {
@@ -127,10 +127,6 @@ public partial class MainWindow : Window
                 {
                     _logger?.LogWarning("StartServiceCommand is null - ViewModel not properly initialized");
                 }
-            }
-            else
-            {
-                _logger?.LogInformation("Service already running - toggle checked event ignored");
             }
         }
         catch (Exception ex)
@@ -143,8 +139,8 @@ public partial class MainWindow : Window
     {
         try
         {
-            // Only stop service if it's currently running (prevent circular calls)
-            if (_viewModel != null && _viewModel.IsServiceRunning)
+            // Always execute stop command to save user preference, regardless of current service state
+            if (_viewModel != null)
             {
                 if (_viewModel.StopServiceCommand != null)
                 {
@@ -155,10 +151,6 @@ public partial class MainWindow : Window
                 {
                     _logger?.LogWarning("StopServiceCommand is null - ViewModel not properly initialized");
                 }
-            }
-            else
-            {
-                _logger?.LogInformation("Service already stopped - toggle unchecked event ignored");
             }
         }
         catch (Exception ex)

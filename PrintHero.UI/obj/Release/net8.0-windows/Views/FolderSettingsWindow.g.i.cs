@@ -69,7 +69,7 @@ namespace PrintHero.UI.Views {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/PrintHero.UI;V1.0.0.0;component/views/foldersettingswindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/PrintHero.UI;component/views/foldersettingswindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\..\Views\FolderSettingsWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

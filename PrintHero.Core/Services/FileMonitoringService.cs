@@ -185,7 +185,7 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
     private async Task OnFileCreated(FileSystemEventArgs e, MonitoredFolder folder)
     {
 
-        await Task.Delay(1000);
+        await Task.Delay(300);
         await ProcessFile(e.FullPath, folder);
     }
 
@@ -316,9 +316,12 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
         return newFilePath;
     }
 
-    private async Task<bool> WaitForFileAvailable(string filePath, int maxWaitTimeMs = 10000)
+    private async Task<bool> WaitForFileAvailable(string filePath, int maxWaitTimeMs = 5000)
     {
         var startTime = DateTime.Now;
+        var delay = 50; // Start with 50ms
+        var maxDelay = 1000; // Cap at 1 second
+        
         while (DateTime.Now.Subtract(startTime).TotalMilliseconds < maxWaitTimeMs)
         {
             try
@@ -330,11 +333,13 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
             }
             catch (IOException)
             {
-                await Task.Delay(500);
+                await Task.Delay(delay);
+                delay = Math.Min(delay * 2, maxDelay); // Exponential backoff
             }
             catch (UnauthorizedAccessException)
             {
-                await Task.Delay(500);
+                await Task.Delay(delay);
+                delay = Math.Min(delay * 2, maxDelay); // Exponential backoff
             }
         }
         return false;
@@ -404,6 +409,19 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
 
     public void Dispose()
     {
-        StopMonitoringAsync().Wait();
+        try
+        {
+            foreach (var watcher in _watchers.Values)
+            {
+                watcher.EnableRaisingEvents = false;
+                watcher?.Dispose();
+            }
+            _watchers.Clear();
+            _logger?.LogInformation("FileMonitoringService disposed successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error during FileMonitoringService disposal");
+        }
     }
 }

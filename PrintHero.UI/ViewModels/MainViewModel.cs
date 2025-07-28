@@ -437,8 +437,12 @@ namespace PrintHero.UI.ViewModels
                         OnPropertyChanged(nameof(PrintingErrorsToday));
                     }
 
-                    // Save updated statistics to settings immediately
-                    await SaveSettingsAsync();
+                    // Queue settings save (debounced to avoid excessive disk I/O)
+                    _ = Task.Run(async () => 
+                    {
+                        await Task.Delay(2000); // Wait 2 seconds before saving
+                        await SaveSettingsAsync();
+                    });
 
                     // Don't call LoadDailyStatisticsAsync() here as it overwrites our counters
                     // The counters are more reliable for real-time updates
@@ -656,7 +660,7 @@ namespace PrintHero.UI.ViewModels
                 }
                 
                 // Brief delay to ensure all services are ready
-                await Task.Delay(300);
+                await Task.Delay(100);
                 
                 // Ensure we have the required services
                 if (_fileMonitoringService == null)

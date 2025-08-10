@@ -16,7 +16,8 @@
 				 Description="PrintHero - Automatic PDF Printer"
 				 Comments="Complete PDF printing and monitoring solution"
 				 Manufacturer="PrintHero"
-				 Platform="x64" />
+				 Platform="x64"
+				 InstallPrivileges="elevated" />
 
 		<!-- Upgrade Logic -->
 		<MajorUpgrade DowngradeErrorMessage="A newer version of PrintHero is already installed." />
@@ -25,6 +26,9 @@
 		<!-- Custom Properties -->
 		<Property Id="ARPPRODUCTICON" Value="PrintHeroIcon.exe" />
 		<Property Id="ARPNOREPAIR" Value="1" />
+		
+		<!-- Require Administrator privileges for service installation -->
+		<Property Id="MSIUSEREALADMINDETECTION" Value="1" />
 
 		<!-- Features -->
 		<Feature Id="CoreFeature" Title="PrintHero Core Application" Level="1" Description="Main PrintHero application components">
@@ -43,6 +47,10 @@
 
 		<Feature Id="AutoStartup" Title="Auto-start with Windows" Level="1" Description="Automatically start PrintHero when Windows starts">
 			<ComponentRef Id="AutoStartupRegistry" />
+		</Feature>
+
+		<Feature Id="BackgroundService" Title="Background Service" Level="1" Description="Install PrintHero as a Windows background service (requires administrator privileges)">
+			<ComponentRef Id="ServiceInstallation" />
 		</Feature>
 
 		<!-- UI Configuration -->
@@ -88,6 +96,15 @@
 				
 				<!-- Core Library -->
 				<File Id="PrintHeroCore" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.Core.dll" />
+				
+				<!-- Background Service Files -->
+				<File Id="PrintHeroServiceDll" Source="..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.dll" />
+				<File Id="PrintHeroServiceDeps" Source="..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.deps.json" />
+				<File Id="PrintHeroServiceRuntime" Source="..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.runtimeconfig.json" />
+				
+				<!-- Service Dependencies (not already in UI) -->
+				<File Id="MSExtHostingWindowsServices" Source="..\PrintHero.Service\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.WindowsServices.dll" />
+				<File Id="SystemServiceProcess" Source="..\PrintHero.Service\bin\Release\net8.0-windows\System.ServiceProcess.ServiceController.dll" />
 				
 				<!-- PDF Processing -->
 				<File Id="PdfiumViewer" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PdfiumViewer.dll" />
@@ -198,7 +215,7 @@
 		</DirectoryRef>
 		
 		<DirectoryRef Id="WinNet80Folder">
-			<Component Id="WinRuntimeLibs" Guid="99999999-9999-9999-9999-999999999999">
+			<Component Id="WinRuntimeLibs" Guid="99999999-9999-9999-9999-999999999999" Win64="yes">
 				<File Id="SystemDiagnosticsEventLogMessages" Source="..\PrintHero.UI\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll" KeyPath="yes" />
 				<File Id="SystemDiagnosticsEventLogRuntime" Source="..\PrintHero.UI\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll" />
 			</Component>
@@ -274,6 +291,35 @@
 							   Type="string"
 							   Value='"[INSTALLFOLDER]PrintHero.UI.exe" -minimized'
 							   KeyPath="yes" />
+			</Component>
+		</DirectoryRef>
+	</Fragment>
+
+	<!-- Background Service Installation -->
+	<Fragment>
+		<DirectoryRef Id="INSTALLFOLDER">
+			<Component Id="ServiceInstallation" Guid="AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
+				<ServiceInstall Id="PrintHeroBackgroundService"
+								Name="PrintHeroBackgroundService"
+								DisplayName="PrintHero Background Service"
+								Description="Monitors folders and automatically prints PDF files when PrintHero toggle is enabled"
+								Type="ownProcess"
+								Start="demand"
+								Account="LocalSystem"
+								ErrorControl="normal"
+								Interactive="no">
+					<ServiceDependency Id="Spooler" />
+				</ServiceInstall>
+				
+				<ServiceControl Id="PrintHeroServiceControl"
+								Name="PrintHeroBackgroundService"
+								Stop="both"
+								Remove="uninstall"
+								Wait="no" />
+				
+				<File Id="ServiceExecutable" 
+					  Source="..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.exe"
+					  KeyPath="yes" />
 			</Component>
 		</DirectoryRef>
 	</Fragment>

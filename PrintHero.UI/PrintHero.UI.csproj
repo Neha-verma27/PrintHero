@@ -30,15 +30,41 @@
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.6" />
 		<PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
 		<PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
-		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
 		<PackageReference Include="System.Drawing.Common" Version="6.0.0" />
 		<PackageReference Include="System.Management" Version="6.0.0" />
+		<PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.6" />
 		<PackageReference Include="System.Text.Json" Version="9.0.6" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\PrintHero.Core\PrintHero.Core.csproj" />
+		<ProjectReference Include="..\PrintHero.Service\PrintHero.Service.csproj" />
 	</ItemGroup>
+
+	<!-- Ensure native libraries are copied to output -->
+	<Target Name="CopyPdfiumNativeLibs" AfterTargets="Build">
+		<ItemGroup>
+			<PdfiumFiles Include="$(NuGetPackageRoot)pdfiumviewer.native.x86_64.v8-xfa\**\pdfium.dll" />
+		</ItemGroup>
+		<Copy SourceFiles="@(PdfiumFiles)" DestinationFolder="$(OutputPath)x64" SkipUnchangedFiles="true" Condition="Exists('%(PdfiumFiles.FullPath)')" />
+	</Target>
+
+	<!-- Copy service executable and all its dependencies to UI output directory -->
+	<Target Name="CopyServiceExecutable" AfterTargets="Build">
+		<ItemGroup>
+			<!-- Main service files -->
+			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\PrintHero.Service.exe" />
+			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\PrintHero.Service.dll" />
+			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\PrintHero.Service.deps.json" />
+			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\PrintHero.Service.runtimeconfig.json" />
+			
+			<!-- Service dependencies that might not be in UI output -->
+			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\Microsoft.Extensions.Hosting.WindowsServices.dll" />
+			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\System.ServiceProcess.ServiceController.dll" />
+		</ItemGroup>
+		<Copy SourceFiles="@(ServiceFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" Condition="Exists('%(ServiceFiles.FullPath)')" />
+	</Target>
 
 	<ItemGroup>
 	  <Resource Include="Resources\printhero-logo.png">

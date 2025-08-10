@@ -6,7 +6,7 @@
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>{0b6d2430-1ad8-4e46-b17b-d8f6e7dcadab}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>PrintHeroSetup</OutputName>
+    <OutputName>PrintHeroSetup_$(Configuration)_$(Platform)</OutputName>
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
@@ -54,5 +54,16 @@
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />
   <Target Name="EnsureWixToolsetInstalled" Condition=" '$(WixTargetsImported)' != 'true' ">
     <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project." />
+  </Target>
+  
+  <!-- Clean old MSI files before build to prevent locking issues -->
+  <Target Name="CleanOldMsi" BeforeTargets="Build">
+    <ItemGroup>
+      <OldMsiFiles Include="$(OutputPath)*.msi" />
+      <OldMsiFiles Include="$(OutputPath)*.wixpdb" />
+      <OldMsiFiles Include="$(OutputPath)*.cab" />
+    </ItemGroup>
+    <Delete Files="@(OldMsiFiles)" ContinueOnError="true" />
+    <Message Text="Cleaned old MSI files from $(OutputPath)" />
   </Target>
 </Project>

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "hHmC4HoSe6M=",
+  "dgSpecHash": "eBAHpXmOZBI=",
   "success": true,
   "projectFilePath": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\PrintHero.Service.csproj",
   "expectedPackageFiles": [
@@ -23,6 +23,7 @@
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.extensions.filesystemglobbing\\9.0.6\\microsoft.extensions.filesystemglobbing.9.0.6.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.extensions.hosting\\9.0.6\\microsoft.extensions.hosting.9.0.6.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.extensions.hosting.abstractions\\9.0.6\\microsoft.extensions.hosting.abstractions.9.0.6.nupkg.sha512",
+    "C:\\Users\\HP\\.nuget\\packages\\microsoft.extensions.hosting.windowsservices\\9.0.6\\microsoft.extensions.hosting.windowsservices.9.0.6.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.extensions.logging\\9.0.6\\microsoft.extensions.logging.9.0.6.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\9.0.6\\microsoft.extensions.logging.abstractions.9.0.6.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\microsoft.extensions.logging.configuration\\9.0.6\\microsoft.extensions.logging.configuration.9.0.6.nupkg.sha512",
@@ -53,6 +54,7 @@
     "C:\\Users\\HP\\.nuget\\packages\\system.io.pipelines\\9.0.6\\system.io.pipelines.9.0.6.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\system.management\\6.0.0\\system.management.6.0.0.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512",
+    "C:\\Users\\HP\\.nuget\\packages\\system.serviceprocess.servicecontroller\\9.0.6\\system.serviceprocess.servicecontroller.9.0.6.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\system.text.encodings.web\\9.0.6\\system.text.encodings.web.9.0.6.nupkg.sha512",
     "C:\\Users\\HP\\.nuget\\packages\\system.text.json\\9.0.6\\system.text.json.9.0.6.nupkg.sha512"
   ],

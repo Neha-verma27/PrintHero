@@ -13,7 +13,7 @@ public class JsonConfigService
     public JsonConfigService(ILogger<JsonConfigService>? logger = null)
     {
         _configFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
             "PrintHero");
         
         Directory.CreateDirectory(_configFolder);

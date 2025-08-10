@@ -25,23 +25,22 @@ public enum PrintJobStatus
     Failed = 3
 }
 
-public class PrintJobStats
+// New model for print job configurations/monitoring rules
+public class PrintJobConfiguration
 {
-    public int TotalJobs { get; set; }
-    public int CompletedJobs { get; set; }
-    public int FailedJobs { get; set; }
-    public int PendingJobs { get; set; }
-    public double SuccessRate => TotalJobs > 0 ? (double)CompletedJobs / TotalJobs * 100 : 0;
-    public DateTime LastUpdated { get; set; } = DateTime.Now;
+    public int Id { get; set; }
+    public string JobName { get; set; } = string.Empty;
+    public string HotFolderPath { get; set; } = string.Empty;
+    public string FilePattern { get; set; } = "*.PDF";
+    public string PrinterName { get; set; } = string.Empty;
+    public string PaperType { get; set; } = "A4";
+    public string Orientation { get; set; } = "Portrait";
+    public bool IsActive { get; set; } = true;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
+    
+    // Derived properties for display
+    public string Status => IsActive ? "Active" : "Inactive";
+    public string DisplayName => string.IsNullOrEmpty(JobName) ? "Unnamed Job" : JobName;
 }
 
-public class PrintJobAnalytics
-{
-    public Dictionary<string, int> JobsByFileType { get; set; } = new();
-    public Dictionary<string, int> JobsByPrinter { get; set; } = new();
-    public Dictionary<string, int> ErrorsByType { get; set; } = new();
-    public List<PrintJob> RecentJobs { get; set; } = new();
-    public PrintJobStats DailyStats { get; set; } = new();
-    public PrintJobStats WeeklyStats { get; set; } = new();
-    public PrintJobStats MonthlyStats { get; set; } = new();
-}

@@ -1,3 +1,6 @@
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\PrintHero.Service.deps.json
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\PrintHero.Service.runtimeconfig.json
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\PrintHero.Service.exe
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\PrintHero.UI.exe
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\x64\pdfium.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\PrintHero.UI.dll.config
@@ -227,6 +230,7 @@ C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Microsoft.
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Microsoft.Extensions.FileSystemGlobbing.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Hosting.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Hosting.WindowsServices.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Logging.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Logging.Abstractions.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Microsoft.Extensions.Logging.Configuration.dll
@@ -247,6 +251,7 @@ C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\PdfSharp.d
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Serilog.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Serilog.Extensions.Hosting.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Serilog.Extensions.Logging.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Serilog.Sinks.Console.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\Serilog.Sinks.File.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\SQLitePCLRaw.batteries_v2.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\SQLitePCLRaw.core.dll
@@ -255,6 +260,7 @@ C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\System.Dia
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\System.Diagnostics.EventLog.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\System.IO.Pipelines.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\System.Management.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\System.ServiceProcess.ServiceController.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\System.Text.Encodings.Web.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\System.Text.Json.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\nl\PdfiumViewer.resources.dll
@@ -283,15 +289,20 @@ C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\runtimes\w
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\runtimes\win\lib\net6.0\System.Management.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.ServiceProcess.ServiceController.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\PrintHero.Core.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\PrintHero.Service.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\PrintHero.Core.pdb
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\bin\Debug\net8.0-windows\PrintHero.Service.pdb
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\PrintHero.UI.csproj.AssemblyReference.cache
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\MainWindow.baml
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\Views\FolderSettingsWindow.baml
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\Views\PrinterSelectionWindow.baml
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\Views\PrinterSettingsWindow.baml
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\MainWindow.g.cs
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\Views\FolderSettingsWindow.g.cs
+C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\Views\PrinterSelectionWindow.g.cs
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\Views\PrinterSettingsWindow.g.cs
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\App.g.cs
 C:\Projects\PrintHero\PrintHero\PrintHero.UI\obj\Debug\net8.0-windows\PrintHero.UI_MarkupCompile.cache

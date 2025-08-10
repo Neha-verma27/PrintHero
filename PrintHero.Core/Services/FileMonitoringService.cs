@@ -60,6 +60,31 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
         }
     }
 
+    public async Task StartMonitoringPrintJobsAsync(IEnumerable<PrintJobConfiguration>? printJobs)
+    {
+        if (printJobs == null || !printJobs.Any())
+        {
+            _logger?.LogWarning("No print jobs provided for monitoring");
+            return;
+        }
+
+        foreach (var printJob in printJobs.Where(pj => pj.IsActive))
+        {
+            // Convert PrintJobConfiguration to MonitoredFolder for legacy monitoring
+            var folder = new MonitoredFolder
+            {
+                Id = printJob.Id,
+                FolderPath = printJob.HotFolderPath,
+                FilePattern = printJob.FilePattern,
+                IsActive = printJob.IsActive
+            };
+
+            await StartMonitoringFolderAsync(folder);
+        }
+
+        _logger?.LogInformation($"Started monitoring {printJobs.Count()} print jobs");
+    }
+
     private async Task<List<MonitoredFolder>> GetActiveMonitoredFoldersAsync()
     {
         try
@@ -146,6 +171,13 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
 
             watcher.Created += async (sender, e) => await OnFileCreated(e, folder);
             watcher.EnableRaisingEvents = true;
+
+            // Dispose existing watcher if one exists for this path
+            if (_watchers.TryGetValue(folder.FolderPath, out var existingWatcher))
+            {
+                existingWatcher.EnableRaisingEvents = false;
+                existingWatcher.Dispose();
+            }
 
             _watchers[folder.FolderPath] = watcher;
 
@@ -259,62 +291,6 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
     }
 
 
-    private bool MoveFileToFolder(string sourceFilePath, string destinationFolder)
-    {
-        try
-        {
-
-            if (string.IsNullOrEmpty(destinationFolder))
-            {
-                destinationFolder = Path.Combine(Path.GetDirectoryName(sourceFilePath), "Printed");
-            }
-
-            if (!Directory.Exists(destinationFolder))
-            {
-                Directory.CreateDirectory(destinationFolder);
-                _logger.LogInformation($"Created directory: {destinationFolder}");
-            }
-
-            string fileName = Path.GetFileName(sourceFilePath);
-            string destinationPath = Path.Combine(destinationFolder, fileName);
-
-            destinationPath = GetUniqueFileName(destinationPath);
-
-            // Move the file
-            File.Move(sourceFilePath, destinationPath);
-
-            _logger.LogInformation($"File moved from {sourceFilePath} to {destinationPath}");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"Error moving file: {ex.Message}");
-            return false;
-        }
-    }
-
-    private string GetUniqueFileName(string filePath)
-    {
-        if (!File.Exists(filePath))
-            return filePath;
-
-        string directory = Path.GetDirectoryName(filePath);
-        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
-        string extension = Path.GetExtension(filePath);
-
-        int counter = 1;
-        string newFilePath;
-
-        do
-        {
-            string newFileName = $"{fileNameWithoutExtension}_{counter}{extension}";
-            newFilePath = Path.Combine(directory, newFileName);
-            counter++;
-        }
-        while (File.Exists(newFilePath));
-
-        return newFilePath;
-    }
 
     private async Task<bool> WaitForFileAvailable(string filePath, int maxWaitTimeMs = 5000)
     {

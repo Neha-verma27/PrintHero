@@ -6,6 +6,7 @@ public interface IFileMonitoringService
 {
     event EventHandler<FileProcessedEventArgs>? FileProcessed;
     Task StartMonitoringAsync(IEnumerable<MonitoredFolder>? folders);
+    Task StartMonitoringPrintJobsAsync(IEnumerable<PrintJobConfiguration>? printJobs);
     Task StopMonitoringAsync();
     Task RestartMonitoringAsync(IEnumerable<MonitoredFolder>? folders = null);
 }

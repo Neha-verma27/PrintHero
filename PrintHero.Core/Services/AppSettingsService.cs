@@ -13,17 +13,8 @@ public class AppSettingsService : IAppSettingsService
     public AppSettingsService(ILogger<AppSettingsService> logger)
     {
         _logger = logger;
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        
-        // Use different folder based on build configuration
-        string folderName;
-#if DEBUG
-        folderName = "PrintHero_Debug";
-#else
-        folderName = "PrintHero_Release";
-#endif
-        
-        var printHeroPath = Path.Combine(appDataPath, folderName);
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        var printHeroPath = Path.Combine(appDataPath, "PrintHero");
         Directory.CreateDirectory(printHeroPath);
         _settingsPath = Path.Combine(printHeroPath, "settings.json");
         

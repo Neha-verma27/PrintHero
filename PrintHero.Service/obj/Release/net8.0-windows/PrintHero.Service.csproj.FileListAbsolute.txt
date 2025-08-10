@@ -22,6 +22,7 @@ C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\Mic
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\Microsoft.Extensions.FileSystemGlobbing.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.WindowsServices.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Abstractions.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Configuration.dll
@@ -51,6 +52,7 @@ C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\Sys
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\System.Diagnostics.EventLog.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\System.IO.Pipelines.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\System.Management.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\System.ServiceProcess.ServiceController.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\System.Text.Encodings.Web.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\System.Text.Json.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\nl\PdfiumViewer.resources.dll
@@ -79,6 +81,7 @@ C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\run
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\runtimes\win\lib\net6.0\System.Management.dll
+C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.ServiceProcess.ServiceController.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Core.dll
 C:\Projects\PrintHero\PrintHero\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Core.pdb

@@ -6,6 +6,7 @@ public class AppSettings
     public string PaperSize { get; set; } = "A4";
     public string Orientation { get; set; } = "Portrait";
     public List<MonitoredFolder> MonitoredFolders { get; set; } = new();
+    public List<PrintJobConfiguration> PrintJobConfigurations { get; set; } = new();
     public bool AutoStartService { get; set; } = true;
     public bool IsServiceEnabledByUser { get; set; } = true;
     public int FilesProcessedToday { get; set; } = 0;

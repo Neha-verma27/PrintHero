@@ -3,6 +3,11 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Extensions.Logging;
 using MessageBox = System.Windows.MessageBox;
+using Microsoft.Win32;
+using System.IO;
+using System.Linq;
+using ComboBox = System.Windows.Controls.ComboBox;
+using ComboBoxItem = System.Windows.Controls.ComboBoxItem;
 
 namespace PrintHero.UI.Views
 {
@@ -10,10 +15,14 @@ namespace PrintHero.UI.Views
     {
         private readonly ILogger? _logger;
         private List<string> _availablePrinters = new();
+        private List<string> _existingJobNames = new();
 
         public string? SelectedPrinter { get; private set; }
         public string PaperSize { get; private set; } = "A4";
         public string Orientation { get; private set; } = "Portrait";
+        public string JobName { get; private set; } = string.Empty;
+        public string HotFolderPath { get; private set; } = string.Empty;
+        public string FileType { get; private set; } = "*.PDF";
 
         public PrinterSettingsWindow()
         {
@@ -29,6 +38,11 @@ namespace PrintHero.UI.Views
         public PrinterSettingsWindow(ILogger<PrinterSettingsWindow> logger) : this()
         {
             _logger = logger;
+        }
+
+        public void SetExistingJobNames(List<string> existingJobNames)
+        {
+            _existingJobNames = existingJobNames ?? new List<string>();
         }
 
         private void PrinterSettingsWindow_Loaded(object sender, RoutedEventArgs e)
@@ -52,12 +66,10 @@ namespace PrintHero.UI.Views
             try
             {
                 _availablePrinters.Clear();
-                PrinterComboBox.Items.Clear();
 
                 foreach (string printerName in PrinterSettings.InstalledPrinters)
                 {
                     _availablePrinters.Add(printerName);
-                    PrinterComboBox.Items.Add(printerName);
                 }
 
                 if (_availablePrinters.Any())
@@ -70,16 +82,7 @@ namespace PrintHero.UI.Views
                     else
                     {
                         var defaultPrinter = new PrinterSettings().PrinterName;
-                        var defaultIndex = _availablePrinters.IndexOf(defaultPrinter);
-
-                        if (defaultIndex >= 0)
-                        {
-                            PrinterComboBox.SelectedIndex = defaultIndex;
-                        }
-                        else
-                        {
-                            PrinterComboBox.SelectedIndex = 0;
-                        }
+                        PrinterSelectionTextBox.Text = defaultPrinter;
                     }
 
                     UpdatePrinterStatus("Ready");
@@ -117,8 +120,8 @@ namespace PrintHero.UI.Views
 
                 _logger?.LogInformation($"Pending settings stored - Printer: {defaultPrinter}, Paper: {paperSize}, Orientation: {orientation}");
 
-                // Apply settings if printers are already loaded
-                if (PrinterComboBox.Items.Count > 0)
+                // Apply settings if available printers are loaded
+                if (_availablePrinters.Any())
                 {
                     ApplyPendingSettings();
                 }
@@ -134,62 +137,32 @@ namespace PrintHero.UI.Views
             try
             {
                 // Load existing printer selection if available
-                if (!string.IsNullOrEmpty(_pendingPrinter) && PrinterComboBox.Items.Count > 0)
+                if (!string.IsNullOrEmpty(_pendingPrinter))
                 {
-                    for (int i = 0; i < PrinterComboBox.Items.Count; i++)
-                    {
-                        if (PrinterComboBox.Items[i].ToString() == _pendingPrinter)
-                        {
-                            PrinterComboBox.SelectedIndex = i;
-                            _logger?.LogInformation($"Selected printer: {_pendingPrinter} at index {i}");
-                            break;
-                        }
-                    }
+                    PrinterSelectionTextBox.Text = _pendingPrinter;
+                    _logger?.LogInformation($"Set printer: {_pendingPrinter}");
                 }
 
                 // Load existing paper size
                 if (!string.IsNullOrEmpty(_pendingPaperSize))
                 {
-                    for (int i = 0; i < PaperSizeComboBox.Items.Count; i++)
-                    {
-                        if (PaperSizeComboBox.Items[i] is ComboBoxItem item && 
-                            item.Content.ToString()!.StartsWith(_pendingPaperSize, StringComparison.OrdinalIgnoreCase))
-                        {
-                            PaperSizeComboBox.SelectedIndex = i;
-                            _logger?.LogInformation($"Selected paper size: {_pendingPaperSize} at index {i}");
-                            break;
-                        }
-                    }
+                    SelectComboBoxItem(PaperTypeComboBox, _pendingPaperSize);
+                    _logger?.LogInformation($"Set paper size: {_pendingPaperSize}");
                 }
                 else
                 {
-                    PaperSizeComboBox.SelectedIndex = 0; // Default to A4
+                    SelectComboBoxItem(PaperTypeComboBox, "A4"); // Default to A4
                 }
 
                 // Load existing orientation
-                _logger?.LogInformation($"Attempting to set orientation: '{_pendingOrientation}' (Total items: {OrientationComboBox.Items.Count})");
                 if (!string.IsNullOrEmpty(_pendingOrientation))
                 {
-                    if (_pendingOrientation.Equals("Portrait", StringComparison.OrdinalIgnoreCase))
-                    {
-                        OrientationComboBox.SelectedIndex = 0;
-                        _logger?.LogInformation($"Selected orientation: Portrait (index 0), Current selection: {OrientationComboBox.SelectedIndex}");
-                    }
-                    else if (_pendingOrientation.Equals("Landscape", StringComparison.OrdinalIgnoreCase))
-                    {
-                        OrientationComboBox.SelectedIndex = 1;
-                        _logger?.LogInformation($"Selected orientation: Landscape (index 1), Current selection: {OrientationComboBox.SelectedIndex}");
-                    }
-                    else
-                    {
-                        _logger?.LogWarning($"Unknown orientation value: '{_pendingOrientation}', defaulting to Portrait");
-                        OrientationComboBox.SelectedIndex = 0;
-                    }
+                    SelectComboBoxItem(OrientationComboBox, _pendingOrientation);
+                    _logger?.LogInformation($"Set orientation: {_pendingOrientation}");
                 }
                 else
                 {
-                    OrientationComboBox.SelectedIndex = 0; // Default to Portrait
-                    _logger?.LogInformation("No pending orientation, defaulting to Portrait");
+                    SelectComboBoxItem(OrientationComboBox, "Portrait"); // Default to Portrait
                 }
 
                 _logger?.LogInformation("Applied pending settings successfully");
@@ -205,10 +178,10 @@ namespace PrintHero.UI.Views
             try
             {
                 // Set default values if no existing settings are loaded
-                if (PaperSizeComboBox.SelectedIndex == -1)
-                    PaperSizeComboBox.SelectedIndex = 0; // A4
-                if (OrientationComboBox.SelectedIndex == -1)
-                    OrientationComboBox.SelectedIndex = 0; // Portrait
+                if (PaperTypeComboBox.SelectedItem == null)
+                    SelectComboBoxItem(PaperTypeComboBox, "A4");
+                if (OrientationComboBox.SelectedItem == null)
+                    SelectComboBoxItem(OrientationComboBox, "Portrait");
 
                 _logger?.LogInformation("Current settings loaded with defaults");
             }
@@ -220,21 +193,8 @@ namespace PrintHero.UI.Views
 
         private void UpdatePrinterStatus(string status)
         {
-            if (status.ToLower().Contains("ready"))
-            {
-                PrinterStatusText.Text = $"Status: {status}";
-                PrinterStatusText.Foreground = System.Windows.Media.Brushes.Green;
-            }
-            else if (status.ToLower().Contains("error") || status.ToLower().Contains("not found"))
-            {
-                PrinterStatusText.Text = $"Status: {status}";
-                PrinterStatusText.Foreground = System.Windows.Media.Brushes.Red;
-            }
-            else
-            {
-                PrinterStatusText.Text = $"Status: {status}";
-                PrinterStatusText.Foreground = System.Windows.Media.Brushes.Orange;
-            }
+            // Status is now static text in XAML, no need to update dynamically
+            _logger?.LogInformation($"Printer status: {status}");
         }
 
         private void RefreshPrinters_Click(object sender, RoutedEventArgs e)
@@ -258,14 +218,14 @@ namespace PrintHero.UI.Views
         {
             try
             {
-                if (PrinterComboBox.SelectedItem == null)
+                if (string.IsNullOrEmpty(PrinterSelectionTextBox.Text))
                 {
-                    MessageBox.Show("Please select a printer first.", "No Printer Selected",
+                    MessageBox.Show("Please enter a printer name first.", "No Printer Selected",
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                string selectedPrinter = PrinterComboBox.SelectedItem.ToString()!;
+                string selectedPrinter = PrinterSelectionTextBox.Text;
                 _logger?.LogInformation($"Starting test print to: {selectedPrinter}");
 
                 var printDoc = new PrintDocument();
@@ -281,8 +241,8 @@ namespace PrintHero.UI.Views
                         brush, 100, 100);
 
                     ev.Graphics.DrawString($"Printer: {selectedPrinter}", font, brush, 100, 150);
-                    ev.Graphics.DrawString($"Paper Size: {PaperSizeComboBox.Text}", font, brush, 100, 180);
-                    ev.Graphics.DrawString($"Orientation: {OrientationComboBox.Text}", font, brush, 100, 210);
+                    ev.Graphics.DrawString($"Paper Size: {GetComboBoxText(PaperTypeComboBox)}", font, brush, 100, 180);
+                    ev.Graphics.DrawString($"Orientation: {GetComboBoxText(OrientationComboBox)}", font, brush, 100, 210);
                     ev.Graphics.DrawString($"Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}", font, brush, 100, 240);
                     ev.Graphics.DrawString("This is a test print from PrintHero application.", font, brush, 100, 300);
                 };
@@ -306,35 +266,47 @@ namespace PrintHero.UI.Views
         {
             try
             {
-
-                if (PrinterComboBox.SelectedItem == null)
+                if (string.IsNullOrEmpty(PrinterSelectionTextBox.Text))
                 {
-                    MessageBox.Show("Please select a printer.", "Validation Error",
+                    MessageBox.Show("Please enter a printer name.", "Validation Error",
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                SelectedPrinter = PrinterComboBox.SelectedItem.ToString();
-
-                if (PaperSizeComboBox.SelectedItem is ComboBoxItem paperItem)
+                // Validate required field
+                if (string.IsNullOrEmpty(JobNameTextBox.Text))
                 {
-                    PaperSize = paperItem.Content.ToString()!;
+                    MessageBox.Show("Please enter a job name.", "Validation Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
                 }
 
-                if (OrientationComboBox.SelectedItem is ComboBoxItem orientationItem)
+                // Validate job name uniqueness
+                var jobName = JobNameTextBox.Text.Trim();
+                if (_existingJobNames.Any(name => string.Equals(name, jobName, StringComparison.OrdinalIgnoreCase)))
                 {
-                    Orientation = orientationItem.Content.ToString()!;
-
-                    if (Orientation.Contains("Portrait"))
-                        Orientation = "Portrait";
-                    else if (Orientation.Contains("Landscape"))
-                        Orientation = "Landscape";
+                    MessageBox.Show($"A print job with the name '{jobName}' already exists. Please choose a different name.", "Duplicate Job Name",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    JobNameTextBox.Focus();
+                    JobNameTextBox.SelectAll();
+                    return;
                 }
+
+                if (string.IsNullOrEmpty(HotFolderTextBox.Text))
+                {
+                    MessageBox.Show("Please enter a hot folder path.", "Validation Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                JobName = JobNameTextBox.Text.Trim();
+                HotFolderPath = HotFolderTextBox.Text.Trim();
+                FileType = string.IsNullOrEmpty(FileTypeTextBox.Text) ? "*.PDF" : FileTypeTextBox.Text.Trim();
+                SelectedPrinter = PrinterSelectionTextBox.Text;
+                PaperSize = GetComboBoxText(PaperTypeComboBox);
+                Orientation = GetComboBoxText(OrientationComboBox);
 
                 _logger?.LogInformation($"Saving printer settings: {SelectedPrinter}, {PaperSize}, {Orientation}");
-
-                MessageBox.Show("Printer settings saved successfully!", "Settings Saved",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
 
                 DialogResult = true;
                 Close();
@@ -352,6 +324,105 @@ namespace PrintHero.UI.Views
             _logger?.LogInformation("Printer settings cancelled");
             DialogResult = false;
             Close();
+        }
+
+        private void BrowseFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var folderDialog = new OpenFolderDialog()
+                {
+                    Title = "Select Hot Folder",
+                    Multiselect = false
+                };
+
+                if (!string.IsNullOrEmpty(HotFolderTextBox.Text) && Directory.Exists(HotFolderTextBox.Text))
+                {
+                    folderDialog.InitialDirectory = HotFolderTextBox.Text;
+                }
+
+                if (folderDialog.ShowDialog() == true)
+                {
+                    HotFolderTextBox.Text = folderDialog.FolderName;
+                    _logger?.LogInformation($"Hot folder selected: {folderDialog.FolderName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to open folder browser");
+                MessageBox.Show($"Failed to open folder browser: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void BrowsePrinter_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!_availablePrinters.Any())
+                {
+                    LoadPrinters();
+                    if (!_availablePrinters.Any())
+                    {
+                        MessageBox.Show("No printers are available on this system.", "No Printers",
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                }
+
+                // Create a simple selection dialog
+                var printerSelectionWindow = new PrinterSelectionWindow(_availablePrinters, _logger);
+                printerSelectionWindow.Owner = this;
+                
+                if (printerSelectionWindow.ShowDialog() == true)
+                {
+                    PrinterSelectionTextBox.Text = printerSelectionWindow.SelectedPrinter;
+                    _logger?.LogInformation($"Printer selected: {printerSelectionWindow.SelectedPrinter}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to open printer browser");
+                MessageBox.Show($"Failed to open printer browser: {ex.Message}", "Error",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void SelectComboBoxItem(ComboBox comboBox, string value)
+        {
+            try
+            {
+                foreach (ComboBoxItem item in comboBox.Items)
+                {
+                    if (item.Content?.ToString() == value)
+                    {
+                        comboBox.SelectedItem = item;
+                        return;
+                    }
+                }
+                // If not found, select first item as fallback
+                if (comboBox.Items.Count > 0)
+                {
+                    comboBox.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, $"Failed to select ComboBox item: {value}");
+            }
+        }
+
+        private string GetComboBoxText(ComboBox comboBox)
+        {
+            try
+            {
+                return (comboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to get ComboBox text");
+                return string.Empty;
+            }
         }
     }
 }

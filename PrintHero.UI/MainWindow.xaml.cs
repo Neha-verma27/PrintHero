@@ -4,6 +4,8 @@ using PrintHero.Core.Models;
 using PrintHero.UI.ViewModels;
 using PrintHero.UI.Views;
 using MessageBox = System.Windows.MessageBox;
+using System.Linq;
+using System.IO;
 
 namespace PrintHero.UI;
 
@@ -12,56 +14,71 @@ public partial class MainWindow : Window
     private readonly MainViewModel _viewModel;
     private readonly ILogger<MainWindow> _logger;
 
-    public MainWindow() : this(null, null)
+    public MainWindow()
     {
+        try
+        {
+            InitializeComponent();
+            _viewModel = new MainViewModel(); 
+            _logger = null;
+            DataContext = _viewModel;
+            
+            this.Loaded += MainWindow_Loaded;
+            this.Closing += MainWindow_Closing;
+        }
+        catch (Exception ex)
+        {
+            // Log to Windows Event Log if regular logging fails
+            try
+            {
+                System.Diagnostics.EventLog.WriteEntry("PrintHero", 
+                    $"Critical error in MainWindow constructor: {ex.Message}", 
+                    System.Diagnostics.EventLogEntryType.Error);
+            }
+            catch { }
+            throw; // Re-throw to prevent app from continuing in bad state
+        }
     }
 
     public MainWindow(MainViewModel viewModel, ILogger<MainWindow> logger)
     {
-        InitializeComponent();
-        _viewModel = viewModel ?? new MainViewModel(); 
-        _logger = logger;
-        DataContext = _viewModel;
+        try
+        {
+            InitializeComponent();
+            _viewModel = viewModel ?? new MainViewModel(); 
+            _logger = logger;
+            DataContext = _viewModel;
 
-        this.Loaded += MainWindow_Loaded;
+            this.Loaded += MainWindow_Loaded;
+            this.Closing += MainWindow_Closing;
+        }
+        catch (Exception ex)
+        {
+            // Log to Windows Event Log if regular logging fails
+            try
+            {
+                System.Diagnostics.EventLog.WriteEntry("PrintHero", 
+                    $"Critical error in MainWindow constructor (with DI): {ex.Message}", 
+                    System.Diagnostics.EventLogEntryType.Error);
+            }
+            catch { }
+            throw; // Re-throw to prevent app from continuing in bad state
+        }
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         await LoadInitialDataAsync();
         
-        // Debug: Check DataContext and binding state
-        _logger?.LogInformation("MainWindow loaded - DataContext is ViewModel: {IsViewModel}, ViewModel IsServiceRunning: {IsRunning}", 
-            DataContext == _viewModel, _viewModel?.IsServiceRunning ?? false);
-            
         // Force a final UI refresh after everything is loaded
         Dispatcher.BeginInvoke(new Action(async () =>
         {
             if (_viewModel != null)
             {
-                // Wait a moment for all async operations to complete
                 await Task.Delay(1000);
                 
-                _logger?.LogInformation("Final UI refresh - IsServiceRunning: {IsRunning}, Toggle IsChecked: {IsChecked}", 
-                    _viewModel.IsServiceRunning, PowerToggle.IsChecked);
-                    
-                // Ensure toggle always matches ViewModel state after initialization
-                if (PowerToggle.IsChecked != _viewModel.IsServiceRunning)
-                {
-                    _logger?.LogInformation("?? Syncing toggle state - ViewModel: {ViewModelState}, Toggle: {ToggleState}", 
-                        _viewModel.IsServiceRunning, PowerToggle.IsChecked);
-                    PowerToggle.IsChecked = _viewModel.IsServiceRunning;
-                }
-                
-                // For the desired behavior, ensure service is always ON
-                if (_viewModel.IsServiceRunning)
-                {
-                    _logger?.LogInformation("? PrintHero is running and monitoring - Toggle is ON");
-                }
-                else
-                {
-                    _logger?.LogWarning("?? PrintHero service is not running - this may not be the desired state");
-                }
+                // Always sync toggle with ViewModel state
+                PowerToggle.IsChecked = _viewModel.IsServiceRunning;
             }
         }), System.Windows.Threading.DispatcherPriority.ApplicationIdle);
     }
@@ -72,10 +89,7 @@ public partial class MainWindow : Window
         {
             if (_viewModel != null)
             {
-                // Wait for ViewModel to fully initialize
-                _logger?.LogInformation("Waiting for ViewModel initialization...");
                 await _viewModel.InitializationTask;
-                _logger?.LogInformation("ViewModel initialization completed, refreshing UI...");
 
                 await RefreshUIFromViewModel();
             }
@@ -100,9 +114,6 @@ public partial class MainWindow : Window
                 _viewModel.NotifyPropertyChanged(nameof(_viewModel.FilesProcessedToday));
                 _viewModel.NotifyPropertyChanged(nameof(_viewModel.PrintingErrorsToday));
 
-                // Log current state for debugging
-                _logger?.LogInformation("UI refreshed - Printer: {Printer}, Folder: {Folder}, IsServiceRunning: {IsRunning}", 
-                    _viewModel.DefaultPrinter, _viewModel.FirstMonitoredFolder, _viewModel.IsServiceRunning);
             }
         }
         catch (Exception ex)
@@ -111,197 +122,262 @@ public partial class MainWindow : Window
         }
     }
 
-    private void PowerToggle_Checked(object sender, RoutedEventArgs e)
+    private async void PowerToggle_Checked(object sender, RoutedEventArgs e)
     {
+        if (_viewModel == null) return;
+        
         try
         {
-            // Always execute start command to save user preference, regardless of current service state
-            if (_viewModel != null)
-            {
-                if (_viewModel.StartServiceCommand != null)
-                {
-                    _viewModel.StartServiceCommand.Execute(null);
-                    _logger?.LogInformation("Service started via UI toggle");
-                }
-                else
-                {
-                    _logger?.LogWarning("StartServiceCommand is null - ViewModel not properly initialized");
-                }
-            }
+            PowerToggle.IsEnabled = false;
+            
+            // Call the StartService method directly
+            await CallStartServiceAsync();
+            
+            // Update toggle based on actual service state
+            PowerToggle.IsChecked = _viewModel.IsServiceRunning;
+            
+            // Force save settings immediately
+            await _viewModel.SaveSettingsAsync();
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Failed to start service");
+            PowerToggle.IsChecked = false;
+            System.Windows.MessageBox.Show($"Error starting service: {ex.Message}", 
+                "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            PowerToggle.IsEnabled = true;
+        }
+    }
+    
+    private async Task CallStartServiceAsync()
+    {
+        if (_viewModel?.StartServiceCommand.CanExecute(null) == true)
+        {
+            _viewModel.StartServiceCommand.Execute(null);
+            // Give the async command time to complete
+            await Task.Delay(2000);
         }
     }
 
-    private void PowerToggle_Unchecked(object sender, RoutedEventArgs e)
+    private async void PowerToggle_Unchecked(object sender, RoutedEventArgs e)
     {
+        if (_viewModel == null) return;
+        
         try
         {
-            // Always execute stop command to save user preference, regardless of current service state
-            if (_viewModel != null)
-            {
-                if (_viewModel.StopServiceCommand != null)
-                {
-                    _viewModel.StopServiceCommand.Execute(null);
-                    _logger?.LogInformation("Service stopped via UI toggle");
-                }
-                else
-                {
-                    _logger?.LogWarning("StopServiceCommand is null - ViewModel not properly initialized");
-                }
-            }
+            PowerToggle.IsEnabled = false;
+            
+            // Call the StopService method directly
+            await CallStopServiceAsync();
+            
+            // Update toggle based on actual service state
+            PowerToggle.IsChecked = _viewModel.IsServiceRunning;
+            
+            // Force save settings immediately
+            await _viewModel.SaveSettingsAsync();
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Failed to stop service");
+            System.Windows.MessageBox.Show($"Error stopping service: {ex.Message}", 
+                "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            PowerToggle.IsEnabled = true;
+        }
+    }
+    
+    private async Task CallStopServiceAsync()
+    {
+        if (_viewModel?.StopServiceCommand.CanExecute(null) == true)
+        {
+            _viewModel.StopServiceCommand.Execute(null);
+            // Give the async command time to complete
+            await Task.Delay(2000);
         }
     }
 
-    private async void PrinterSettings_Click(object sender, RoutedEventArgs e)
+    private async Task ForceKillBackgroundService()
     {
         try
         {
-            var printerSettingsWindow = new PrinterSettingsWindow(_logger);
+            // Find and kill PrintHero.Service.exe processes
+            var processes = System.Diagnostics.Process.GetProcessesByName("PrintHero.Service");
             
-            // Pass current settings to the window
-            if (_viewModel != null)
+            foreach (var process in processes)
             {
-                printerSettingsWindow.LoadExistingSettings(_viewModel.DefaultPrinter, _viewModel.PaperSize, _viewModel.Orientation);
+                try
+                {
+                    process.Kill();
+                    await process.WaitForExitAsync();
+                    await Task.Delay(1000); // Wait for cleanup
+                }
+                catch (Exception)
+                {
+                    // Process might already be gone
+                }
+                finally
+                {
+                    process.Dispose();
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Silent fail
+        }
+    }
+
+    private async Task CreateDefaultFolder()
+    {
+        try
+        {
+            var defaultPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
+                "PrintHero", "Input");
+
+            if (!Directory.Exists(defaultPath))
+            {
+                Directory.CreateDirectory(defaultPath);
+            }
+
+            var defaultFolder = new PrintHero.Core.Models.MonitoredFolder
+            {
+                FolderPath = defaultPath,
+                FilePattern = "*.pdf",
+                IsActive = true,
+                IncludeSubfolders = false,
+                CreatedAt = DateTime.Now
+            };
+
+            _viewModel.MonitoredFolders?.Add(defaultFolder);
+            await _viewModel.SaveSettingsAsync();
+        }
+        catch (Exception)
+        {
+            // Silent fail
+        }
+    }
+
+    private async void AddPrintJob_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var printJobSettingsWindow = new PrinterSettingsWindow(_logger);
+            
+            // Pass existing job names for uniqueness validation
+            if (_viewModel?.PrintJobConfigurations != null)
+            {
+                var existingJobNames = _viewModel.PrintJobConfigurations
+                    .Select(job => job.JobName)
+                    .Where(name => !string.IsNullOrEmpty(name))
+                    .ToList();
+                printJobSettingsWindow.SetExistingJobNames(existingJobNames);
             }
             
-            printerSettingsWindow.Owner = this;
-            var result = printerSettingsWindow.ShowDialog();
+            printJobSettingsWindow.Owner = this;
+            var result = printJobSettingsWindow.ShowDialog();
 
-            if (result == true)
+            if (result == true && _viewModel != null)
             {
-                if (!string.IsNullOrEmpty(printerSettingsWindow.SelectedPrinter) && _viewModel != null)
+                // Create new print job configuration from the settings window
+                var newPrintJobConfig = new PrintHero.Core.Models.PrintJobConfiguration
                 {
-                    _viewModel.DefaultPrinter = printerSettingsWindow.SelectedPrinter;
-                }
+                    Id = (_viewModel.PrintJobConfigurations?.Any() == true) 
+                        ? _viewModel.PrintJobConfigurations.Max(j => j.Id) + 1 
+                        : 1,
+                    JobName = printJobSettingsWindow.JobName,
+                    HotFolderPath = printJobSettingsWindow.HotFolderPath,
+                    FilePattern = printJobSettingsWindow.FileType,
+                    PrinterName = printJobSettingsWindow.SelectedPrinter,
+                    PaperType = printJobSettingsWindow.PaperSize,
+                    Orientation = printJobSettingsWindow.Orientation,
+                    IsActive = true,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
 
-                if (!string.IsNullOrEmpty(printerSettingsWindow.PaperSize) && _viewModel != null)
+                // Add to the print job configurations collection
+                if (_viewModel.PrintJobConfigurations == null)
                 {
-                    string paperSize = printerSettingsWindow.PaperSize;
-                    if (paperSize.Contains("("))
-                    {
-                        paperSize = paperSize.Substring(0, paperSize.IndexOf("(")).Trim();
-                    }
-                    _viewModel.PaperSize = paperSize;
+                    _viewModel.PrintJobConfigurations = new System.Collections.ObjectModel.ObservableCollection<PrintHero.Core.Models.PrintJobConfiguration>();
                 }
                 
-                if (!string.IsNullOrEmpty(printerSettingsWindow.Orientation) && _viewModel != null)
-                {
-                    _viewModel.Orientation = printerSettingsWindow.Orientation;
-                }
+                _viewModel.PrintJobConfigurations.Add(newPrintJobConfig);
                 
                 // Save the settings to persistent storage
                 await _viewModel.SaveSettingsAsync();
                 
-                // Update the PrintingService with the new settings immediately
-                await UpdatePrintingServiceSettingsAsync();
-                
-                _logger?.LogInformation($"Printer settings updated and saved - Printer: {printerSettingsWindow.SelectedPrinter}, Paper: {printerSettingsWindow.PaperSize}, Orientation: {printerSettingsWindow.Orientation}");
-                _logger?.LogInformation($"ViewModel now has - Printer: {_viewModel.DefaultPrinter}, Paper: {_viewModel.PaperSize}, Orientation: {_viewModel.Orientation}");
+                // Restart the monitoring service to include the new print job
+                if (_viewModel.IsServiceRunning)
+                {
+                    await RestartMonitoringServiceAsync();
+                }
 
-                MessageBox.Show("Printer settings have been updated and saved successfully!",
-                    "Settings Updated", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Print job '{newPrintJobConfig.DisplayName}' has been created successfully!",
+                    "Print Job Created", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Failed to open printer settings window");
-            MessageBox.Show($"Failed to open printer settings: {ex.Message}", "Error",
+            _logger?.LogError(ex, "Failed to create print job");
+            MessageBox.Show($"Failed to create print job: {ex.Message}", "Error",
                           MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
-    private async void HotFolder_Click(object sender, RoutedEventArgs e)
+    private async void RemovePrintJob_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            var folderSettingsWindow = new FolderSettingsWindow(_logger);
-            
-            // Load current hot folder settings if available
-            if (_viewModel != null && _viewModel.MonitoredFolders.Any())
+            if (_viewModel?.PrintJobConfigurations == null || !_viewModel.PrintJobConfigurations.Any())
             {
-                var currentFolder = _viewModel.MonitoredFolders.First();
-                folderSettingsWindow.LoadExistingSettings(
-                    currentFolder.FolderPath,
-                    currentFolder.FilePattern,
-                    currentFolder.IncludeSubfolders
-                );
-                _logger?.LogInformation("Loaded current folder settings: {FolderPath}", currentFolder.FolderPath);
+                MessageBox.Show("No print jobs available to remove.", "No Print Jobs",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
             }
-            
-            folderSettingsWindow.Owner = this;
-            var result = folderSettingsWindow.ShowDialog();
 
-            if (result == true && _viewModel != null)
+            // Get the selected print job from the DataGrid
+            var selectedPrintJob = PrintJobsGrid.SelectedItem as PrintHero.Core.Models.PrintJobConfiguration;
+            if (selectedPrintJob == null)
             {
-                if (!string.IsNullOrEmpty(folderSettingsWindow.FolderPathTextBox.Text))
-                {
-                    var updatedFolder = new MonitoredFolder
-                    {
-                        FolderPath = folderSettingsWindow.FolderPathTextBox.Text,
-                        FilePattern = folderSettingsWindow.FilePatternTextBox.Text,
-                        IsActive = true,
-                        CreatedAt = DateTime.Now
-                    };
+                MessageBox.Show("Please select a print job to remove.", "No Selection",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-                    // Update existing folder or add new one
-                    if (_viewModel.MonitoredFolders.Any())
-                    {
-                        // Update the first (current) folder
-                        var existingFolder = _viewModel.MonitoredFolders.First();
-                        updatedFolder.Id = existingFolder.Id; // Preserve ID
-                        updatedFolder.CreatedAt = existingFolder.CreatedAt; // Preserve creation date
-                        
-                        // Remove old and add updated
-                        _viewModel.MonitoredFolders.Clear();
-                        _viewModel.MonitoredFolders.Add(updatedFolder);
-                        
-                        _logger?.LogInformation("Updated existing folder: {OldPath} -> {NewPath}", 
-                            existingFolder.FolderPath, updatedFolder.FolderPath);
-                    }
-                    else
-                    {
-                        // Add as new folder
-                        _viewModel.MonitoredFolders.Add(updatedFolder);
-                        _logger?.LogInformation("Added new folder: {FolderPath}", updatedFolder.FolderPath);
-                    }
-                    
-                    // Force save the complete settings
-                    await _viewModel.SaveSettingsAsync();
-                    
-                    // Force refresh the UI to show the updated folder
-                    _viewModel.NotifyPropertyChanged(nameof(_viewModel.FirstMonitoredFolder));
-                    
-                    // Restart the monitoring service to pick up the new folder settings
-                    await RestartMonitoringServiceAsync();
-                    
-                    // Log the current state for debugging
-                    _logger?.LogInformation("Hot folder settings updated. Now monitoring: {FirstFolder}", 
-                        _viewModel.FirstMonitoredFolder);
-                    
-                    MessageBox.Show($"Hot folder settings have been updated successfully!\n\nNow monitoring: {_viewModel.FirstMonitoredFolder}\nFile pattern: {updatedFolder.FilePattern}", 
-                        "Settings Updated", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                else
+            // Confirm deletion
+            var result = MessageBox.Show($"Are you sure you want to remove the print job '{selectedPrintJob.DisplayName}'?\n\nThis action cannot be undone.",
+                "Confirm Removal", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                // Remove from the collection
+                _viewModel.PrintJobConfigurations.Remove(selectedPrintJob);
+                
+                // Save the updated settings
+                await _viewModel.SaveSettingsAsync();
+                
+                // Restart the monitoring service to remove the print job from monitoring
+                if (_viewModel.IsServiceRunning)
                 {
-                    MessageBox.Show("Please specify a valid folder path.", "Invalid Input",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    await RestartMonitoringServiceAsync();
                 }
+
+                MessageBox.Show($"Print job '{selectedPrintJob.DisplayName}' has been removed successfully!",
+                    "Print Job Removed", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Failed to save hot folder settings");
-            MessageBox.Show($"Failed to save folder settings: {ex.Message}", "Error",
+            _logger?.LogError(ex, "Failed to remove print job");
+            MessageBox.Show($"Failed to remove print job: {ex.Message}", "Error",
                           MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
+
 
     private async Task RestartMonitoringServiceAsync()
     {
@@ -309,24 +385,20 @@ public partial class MainWindow : Window
         {
             if (_viewModel?.IsServiceRunning == true)
             {
-                _logger?.LogInformation("Restarting monitoring service to update folder settings");
-                
-                // Get access to the file monitoring service through the ViewModel
                 var fileMonitoringService = GetFileMonitoringService();
                 if (fileMonitoringService != null)
                 {
-                    // Restart monitoring with the updated folder settings
-                    await fileMonitoringService.RestartMonitoringAsync(_viewModel.MonitoredFolders);
-                    _logger?.LogInformation("Monitoring service restarted successfully with new folder settings");
+                    await fileMonitoringService.StopMonitoringAsync();
+                    
+                    if (_viewModel.PrintJobConfigurations.Any())
+                    {
+                        await fileMonitoringService.StartMonitoringPrintJobsAsync(_viewModel.PrintJobConfigurations);
+                    }
+                    else if (_viewModel.MonitoredFolders.Any())
+                    {
+                        await fileMonitoringService.StartMonitoringAsync(_viewModel.MonitoredFolders);
+                    }
                 }
-                else
-                {
-                    _logger?.LogWarning("Could not access file monitoring service - settings may not take effect until service restart");
-                }
-            }
-            else
-            {
-                _logger?.LogInformation("Service not running - folder settings will be applied when service starts");
             }
         }
         catch (Exception ex)
@@ -361,19 +433,11 @@ public partial class MainWindow : Window
             var printingService = GetPrintingService();
             if (printingService != null)
             {
-                // Update the printing service with current ViewModel settings
                 printingService.SetPrinterSettings(
                     _viewModel.DefaultPrinter ?? string.Empty,
                     _viewModel.PaperSize,
                     _viewModel.Orientation
                 );
-                
-                _logger?.LogInformation("PrintingService updated with new settings - Printer: {Printer}, Paper: {Paper}, Orientation: {Orientation}", 
-                    _viewModel.DefaultPrinter, _viewModel.PaperSize, _viewModel.Orientation);
-            }
-            else
-            {
-                _logger?.LogWarning("Could not access printing service - new printer settings may not take effect until service restart");
             }
         }
         catch (Exception ex)
@@ -397,4 +461,201 @@ public partial class MainWindow : Window
             return null;
         }
     }
+
+    public async void TestToggleManually(bool turnOn)
+    {
+        try
+        {
+            if (turnOn)
+            {
+                PowerToggle_Checked(PowerToggle, new RoutedEventArgs());
+            }
+            else
+            {
+                PowerToggle_Unchecked(PowerToggle, new RoutedEventArgs());
+            }
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+
+    private PrintHero.Core.Services.WindowsServiceController? GetServiceController()
+    {
+        try
+        {
+            var viewModelType = _viewModel?.GetType();
+            if (viewModelType == null) return null;
+            
+            var field = viewModelType.GetField("_serviceController", 
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            return field?.GetValue(_viewModel) as PrintHero.Core.Services.WindowsServiceController;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    private async void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        try
+        {
+            // In installed apps, only stop local monitoring but keep Windows service running
+            // In development, stop everything to prevent file locking
+            if (IsInstalledApp())
+            {
+                // For installed apps: only stop local monitoring, let Windows service continue
+                if (_viewModel?.StopServiceCommand.CanExecute(null) == true)
+                {
+                    // This will stop gracefully but Windows service will continue running in background
+                    _viewModel.StopServiceCommand.Execute(null);
+                }
+            }
+            else
+            {
+                // For development: stop everything including killing processes
+                if (_viewModel?.StopServiceCommand.CanExecute(null) == true)
+                {
+                    _viewModel.StopServiceCommand.Execute(null);
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Silent fail - don't prevent window from closing
+        }
+    }
+
+    private bool IsInstalledApp()
+    {
+        try
+        {
+            var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var appDirectory = Path.GetDirectoryName(appPath) ?? string.Empty;
+            
+            return !appDirectory.Contains("bin\\Debug") && 
+                   !appDirectory.Contains("bin\\Release") && 
+                   !appDirectory.Contains("\\obj\\") &&
+                   (appDirectory.Contains("Program Files") || 
+                    appDirectory.Contains("ProgramFiles") ||
+                    (!appDirectory.Contains("Projects") &&
+                     !appDirectory.Contains("Source") &&
+                     !appDirectory.Contains("src")));
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private bool IsRunningAsAdministrator()
+    {
+        try
+        {
+            var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+            var principal = new System.Security.Principal.WindowsPrincipal(identity);
+            return principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    // Method to completely remove the background service (for troubleshooting)
+    public async Task DeleteBackgroundServiceAsync()
+    {
+        try
+        {
+            var serviceController = GetServiceController();
+            if (serviceController != null)
+            {
+                await serviceController.UninstallServiceAsync();
+            }
+            
+            // Also force kill any running processes
+            await ForceKillBackgroundService();
+        }
+        catch (Exception)
+        {
+            // Silent fail
+        }
+    }
+
+    // Method to check if background service is installed
+    public async Task<bool> IsBackgroundServiceInstalledAsync()
+    {
+        try
+        {
+            var serviceController = GetServiceController();
+            if (serviceController != null)
+            {
+                return await serviceController.IsServiceInstalledAsync();
+            }
+            return false;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    // Debug method to test service functionality
+    public async Task<string> TestServiceStatusAsync()
+    {
+        try
+        {
+            var result = new System.Text.StringBuilder();
+            
+            result.AppendLine($"Is Installed App: {IsInstalledApp()}");
+            result.AppendLine($"Running as Administrator: {IsRunningAsAdministrator()}");
+            result.AppendLine($"ViewModel IsServiceRunning: {_viewModel?.IsServiceRunning}");
+            
+            var serviceController = GetServiceController();
+            if (serviceController == null)
+            {
+                result.AppendLine("ServiceController is null");
+                return result.ToString();
+            }
+
+            var isInstalled = await serviceController.IsServiceInstalledAsync();
+            result.AppendLine($"Service installed: {isInstalled}");
+            
+            if (isInstalled)
+            {
+                var isRunning = await serviceController.IsServiceRunningAsync();
+                result.AppendLine($"Service running: {isRunning}");
+            }
+            
+            return result.ToString();
+        }
+        catch (Exception ex)
+        {
+            return $"Error: {ex.Message}";
+        }
+    }
+
+    // Simple test method to manually trigger toggle
+    public async Task TestToggleOnAsync()
+    {
+        try
+        {
+            if (_viewModel?.StartServiceCommand.CanExecute(null) == true)
+            {
+                _viewModel.StartServiceCommand.Execute(null);
+                await Task.Delay(2000); // Wait for service to start
+            }
+            
+            System.Windows.MessageBox.Show($"Service started\n\n{await TestServiceStatusAsync()}", 
+                "Toggle Test", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Error: {ex.Message}", "Toggle Test Error", 
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+    }
+
 }

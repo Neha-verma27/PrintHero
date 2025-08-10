@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PrintHero.Service")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+515910021cd367fe01d466957245259a0ae4482e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+723e58fba549cc96f3c07f2996a453dbf987b337")]
 [assembly: System.Reflection.AssemblyProductAttribute("PrintHero.Service")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PrintHero.Service")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

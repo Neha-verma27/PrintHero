@@ -10,6 +10,7 @@ using System.IO;
 using MessageBox = System.Windows.MessageBox;
 using Microsoft.Win32;
 using System.Reflection;
+using PrintHero.Core.Services;
 
 namespace PrintHero.UI;
 
@@ -32,6 +33,17 @@ public partial class App : System.Windows.Application
                 .CreateLogger();
 
             Log.Information("PrintHero application starting...");
+
+            // Register exit event handlers to stop services with safe handling
+            try
+            {
+                AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+                this.Exit += OnApplicationExit;
+            }
+            catch (Exception eventEx)
+            {
+                Log.Warning(eventEx, "Failed to register exit event handlers - app will continue but cleanup may be limited");
+            }
 
             try
             {
@@ -57,6 +69,10 @@ public partial class App : System.Windows.Application
                 }
 
                 SetupAutoStart();
+                
+                // For installed apps, the MSI already installs the service
+                // For development, skip service installation to avoid file locking
+                // The app will use the service if it exists, or fall back to local monitoring
 
                 base.OnStartup(e);
                 Log.Information("PrintHero application started successfully");
@@ -114,7 +130,12 @@ public partial class App : System.Windows.Application
                     RegisterViewModels(services);
 
                     // Register Views
-                    services.AddTransient<MainWindow>();
+                    services.AddTransient<MainWindow>(provider =>
+                    {
+                        var viewModel = provider.GetRequiredService<MainViewModel>();
+                        var logger = provider.GetService<ILogger<MainWindow>>();
+                        return new MainWindow(viewModel, logger);
+                    });
 
                     Log.Information("Services registered successfully");
                 }
@@ -129,16 +150,6 @@ public partial class App : System.Windows.Application
 
     private void RegisterCoreServices(IServiceCollection services)
     {
-        try
-        {
-            services.AddSingleton<PrintHero.Core.Data.SqliteDatabaseService>();
-            Log.Information("SqliteDatabaseService registered");
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Failed to register SqliteDatabaseService");
-        }
-
         try
         {
             services.AddSingleton<JsonConfigService>();
@@ -179,6 +190,16 @@ public partial class App : System.Windows.Application
             Log.Warning(ex, "Failed to register AppSettingsService");
         }
 
+        try
+        {
+            services.AddSingleton<WindowsServiceController>();
+            Log.Information("WindowsServiceController registered");
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to register WindowsServiceController");
+        }
+
         // LicensingService removed - no licensing required
     }
 
@@ -193,14 +214,15 @@ public partial class App : System.Windows.Application
                 var settings = provider.GetService<IAppSettingsService>();
                 var logger = provider.GetService<ILogger<MainViewModel>>();
                 var jsonConfig = provider.GetService<JsonConfigService>();
-                var databaseService = provider.GetService<PrintHero.Core.Data.SqliteDatabaseService>();
+                var databaseService = (PrintHero.Core.Data.SqliteDatabaseService?)null;
+                var serviceController = provider.GetService<WindowsServiceController>();
 
-                Log.Information("Creating MainViewModel with services: FileMonitoring={FileMonitoring}, Printing={Printing}, Settings={Settings}, JsonConfig={JsonConfig}, Database={Database}",
-                    fileMonitoring != null, printing != null, settings != null, jsonConfig != null, databaseService != null);
+                Log.Information("Creating MainViewModel with services: FileMonitoring={FileMonitoring}, Printing={Printing}, Settings={Settings}, JsonConfig={JsonConfig}, Database={Database}, ServiceController={ServiceController}",
+                    fileMonitoring != null, printing != null, settings != null, jsonConfig != null, databaseService != null, serviceController != null);
 
                 if (fileMonitoring != null && printing != null && settings != null)
                 {
-                    return new MainViewModel(fileMonitoring, printing, settings, logger, jsonConfig, databaseService);
+                    return new MainViewModel(fileMonitoring, printing, settings, logger, jsonConfig, databaseService, serviceController);
                 }
                 else
                 {
@@ -322,6 +344,177 @@ public partial class App : System.Windows.Application
         }
         
         return false;
+    }
+
+    private async Task TryInstallBackgroundService()
+    {
+        try
+        {
+            // Check if we've already attempted installation
+            const string regKey = @"SOFTWARE\PrintHero";
+            const string regValue = "ServiceInstallAttempted";
+            
+            using (var key = Registry.CurrentUser.OpenSubKey(regKey))
+            {
+                if (key?.GetValue(regValue) != null)
+                {
+                    // Already attempted installation
+                    return;
+                }
+            }
+
+            // Try to install the service
+            if (_host?.Services != null)
+            {
+                var serviceController = _host.Services.GetService<PrintHero.Core.Services.WindowsServiceController>();
+                if (serviceController != null)
+                {
+                    Log.Information("Attempting to install background service...");
+                    var installed = await serviceController.InstallServiceAsync();
+                    
+                    if (installed)
+                    {
+                        Log.Information("Background service installed successfully");
+                    }
+                    else
+                    {
+                        Log.Warning("Background service installation failed - app will use local monitoring");
+                    }
+                }
+            }
+
+            // Mark that we've attempted installation (whether successful or not)
+            try
+            {
+                using var key = Registry.CurrentUser.CreateSubKey(regKey);
+                key?.SetValue(regValue, "1");
+            }
+            catch (Exception regEx)
+            {
+                Log.Warning(regEx, "Failed to update registry after service installation attempt");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to install background service during startup");
+        }
+    }
+
+    private void OnProcessExit(object? sender, EventArgs e)
+    {
+        try
+        {
+            Log.Information("Process exit detected, stopping services...");
+            StopAllServicesSync();
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                Log.Error(ex, "Error stopping services on process exit");
+            }
+            catch
+            {
+                // Even logging failed - just exit cleanly
+            }
+        }
+    }
+
+    private void OnApplicationExit(object? sender, ExitEventArgs e)
+    {
+        try
+        {
+            Log.Information("Application exit detected, stopping services...");
+            StopAllServicesSync();
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                Log.Error(ex, "Error stopping services on application exit");
+            }
+            catch
+            {
+                // Even logging failed - just exit cleanly
+            }
+        }
+    }
+
+    private void StopAllServicesSync()
+    {
+        try
+        {
+            // Only force kill processes in development mode
+            // In installed apps, let Windows service continue running
+            if (!IsInstalledApp())
+            {
+                // Development mode: force kill processes to prevent file locking
+                var processes = System.Diagnostics.Process.GetProcessesByName("PrintHero.Service");
+                foreach (var process in processes)
+                {
+                    try
+                    {
+                        process.Kill();
+                        process.WaitForExit(5000); // Wait up to 5 seconds
+                    }
+                    catch (Exception)
+                    {
+                        // Process might already be gone
+                    }
+                    finally
+                    {
+                        process.Dispose();
+                    }
+                }
+
+                // Try to stop Windows service if it exists (development only)
+                if (_host?.Services != null)
+                {
+                    var serviceController = _host.Services.GetService<PrintHero.Core.Services.WindowsServiceController>();
+                    if (serviceController != null)
+                    {
+                        try
+                        {
+                            serviceController.StopServiceAsync().Wait(TimeSpan.FromSeconds(5));
+                        }
+                        catch (Exception)
+                        {
+                            // Silent fail
+                        }
+                    }
+                }
+            }
+            // In installed mode: Windows service should continue running in background
+        }
+        catch (Exception)
+        {
+            // Silent fail
+        }
+    }
+
+    private bool IsInstalledApp()
+    {
+        try
+        {
+            // Check if we're running from Program Files or a typical installation directory
+            var appPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            var appDirectory = Path.GetDirectoryName(appPath) ?? string.Empty;
+            
+            // Installed apps typically run from Program Files, not from bin/Debug or bin/Release
+            return !appDirectory.Contains("bin\\Debug") && 
+                   !appDirectory.Contains("bin\\Release") && 
+                   !appDirectory.Contains("\\obj\\") &&
+                   (appDirectory.Contains("Program Files") || 
+                    appDirectory.Contains("ProgramFiles") ||
+                    !appDirectory.Contains("Projects") &&
+                    !appDirectory.Contains("Source") &&
+                    !appDirectory.Contains("src"));
+        }
+        catch
+        {
+            // If we can't determine, assume it's installed to be safe
+            return true;
+        }
     }
 
 }

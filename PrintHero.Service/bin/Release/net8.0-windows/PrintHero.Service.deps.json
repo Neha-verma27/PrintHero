@@ -9,6 +9,7 @@
       "PrintHero.Service/1.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Hosting": "9.0.6",
+          "Microsoft.Extensions.Hosting.WindowsServices": "9.0.6",
           "Microsoft.Extensions.Logging": "9.0.6",
           "PrintHero.Core": "1.0.0",
           "Serilog.Extensions.Hosting": "9.0.0",
@@ -258,6 +259,19 @@
         "runtime": {
           "lib/net8.0/Microsoft.Extensions.Hosting.Abstractions.dll": {
             "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.625.26613"
+          }
+        }
+      },
+      "Microsoft.Extensions.Hosting.WindowsServices/9.0.6": {
+        "dependencies": {
+          "Microsoft.Extensions.Hosting": "9.0.6",
+          "Microsoft.Extensions.Logging.EventLog": "9.0.6",
+          "System.ServiceProcess.ServiceController": "9.0.6"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Hosting.WindowsServices.dll": {
+            "assemblyVersion": "9.0.0.6",
             "fileVersion": "9.0.625.26613"
           }
         }
@@ -714,6 +728,25 @@
         }
       },
       "System.Memory/4.5.3": {},
+      "System.ServiceProcess.ServiceController/9.0.6": {
+        "dependencies": {
+          "System.Diagnostics.EventLog": "9.0.6"
+        },
+        "runtime": {
+          "lib/net8.0/System.ServiceProcess.ServiceController.dll": {
+            "assemblyVersion": "9.0.0.6",
+            "fileVersion": "9.0.625.26613"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net8.0/System.ServiceProcess.ServiceController.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "9.0.0.6",
+            "fileVersion": "9.0.625.26613"
+          }
+        }
+      },
       "System.Text.Encodings.Web/9.0.6": {
         "runtime": {
           "lib/net8.0/System.Text.Encodings.Web.dll": {
@@ -754,6 +787,7 @@
           "Serilog.Sinks.File": "6.0.0",
           "System.Drawing.Common": "6.0.0",
           "System.Management": "6.0.0",
+          "System.ServiceProcess.ServiceController": "9.0.6",
           "System.Text.Json": "9.0.6"
         },
         "runtime": {
@@ -903,6 +937,13 @@
       "sha512": "sha512-G9T95JbcG/wQpeVIzg0IMwxI+uTywDmbxWUWN2P0mdna35rmuTqgTrZ4SU5rcfUT3EJfbI9N4K8UyCAAc6QK8Q==",
       "path": "microsoft.extensions.hosting.abstractions/9.0.6",
       "hashPath": "microsoft.extensions.hosting.abstractions.9.0.6.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Hosting.WindowsServices/9.0.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-p93xLbHBl+gAir9vc1Yl6LCg1EXh8P52hRoya9meImgV3VmMqMvThhTC6cghBHQOpcZDucPgGuj3u0yDA2q5OA==",
+      "path": "microsoft.extensions.hosting.windowsservices/9.0.6",
+      "hashPath": "microsoft.extensions.hosting.windowsservices.9.0.6.nupkg.sha512"
     },
     "Microsoft.Extensions.Logging/9.0.6": {
       "type": "package",
@@ -1113,6 +1154,13 @@
       "sha512": "sha512-3oDzvc/zzetpTKWMShs1AADwZjQ/36HnsufHRPcOjyRAAMLDlu2iD33MBI2opxnezcVUtXyqDXXjoFMOU9c7SA==",
       "path": "system.memory/4.5.3",
       "hashPath": "system.memory.4.5.3.nupkg.sha512"
+    },
+    "System.ServiceProcess.ServiceController/9.0.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ba3cPFu9mNtSJ5DTYsDWIkAheBIOENxnsDsrvtk7TbfgcaYMP9oV5+kPH0c/ENkuD1TSpBT5U2tC1Pe7OiDWLA==",
+      "path": "system.serviceprocess.servicecontroller/9.0.6",
+      "hashPath": "system.serviceprocess.servicecontroller.9.0.6.nupkg.sha512"
     },
     "System.Text.Encodings.Web/9.0.6": {
       "type": "package",

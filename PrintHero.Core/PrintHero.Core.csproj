@@ -14,18 +14,29 @@
 		<Folder Include="Data\" />
 	</ItemGroup>
 
+	<!-- Ensure native libraries are copied to output -->
+	<Target Name="CopyPdfiumNativeLibs" AfterTargets="Build">
+		<ItemGroup>
+			<PdfiumFiles Include="$(NuGetPackageRoot)pdfiumviewer.native.x86_64.v8-xfa\**\pdfium.dll" />
+		</ItemGroup>
+		<Copy SourceFiles="@(PdfiumFiles)" DestinationFolder="$(OutputPath)x64" SkipUnchangedFiles="true" Condition="Exists('%(PdfiumFiles.FullPath)')" />
+	</Target>
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.6" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.6" />
 		<PackageReference Include="PdfiumViewer" Version="2.13.0">
 			<NoWarn>NU1701</NoWarn>
 		</PackageReference>
-		<PackageReference Include="PdfiumViewer.Native.x86_64.v8-xfa" Version="2018.4.8.256" />
+		<PackageReference Include="PdfiumViewer.Native.x86_64.v8-xfa" Version="2018.4.8.256">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="PDFsharp" Version="6.0.0" />
 		<PackageReference Include="Serilog" Version="3.0.1" />
 		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
 		<PackageReference Include="System.Drawing.Common" Version="6.0.0" />
 		<PackageReference Include="System.Management" Version="6.0.0" />
+		<PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.6" />
 		<PackageReference Include="System.Text.Json" Version="9.0.6" />
 		<PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
 	</ItemGroup>

@@ -20,6 +20,7 @@ namespace PrintHero.UI.ViewModels
         private readonly ILogger<MainViewModel>? _logger;
         private readonly JsonConfigService? _jsonConfigService;
         private readonly SqliteDatabaseService? _databaseService;
+        private readonly WindowsServiceController _serviceController;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -48,12 +49,12 @@ namespace PrintHero.UI.ViewModels
         {
 
             MonitoredFolders = new ObservableCollection<MonitoredFolder>();
+            PrintJobConfigurations = new ObservableCollection<PrintJobConfiguration>();
             FilesProcessedToday = 0;
             PrintingErrorsToday = 0;
             DefaultPrinter = "No printer selected";
             IsServiceRunning = false;
 
-            SetupDefaultPrintingFolder();
             SetupDefaultPrinter();
 
             StartServiceCommand = new RelayCommand(async () => await StartService());
@@ -65,7 +66,8 @@ namespace PrintHero.UI.ViewModels
                            IAppSettingsService appSettingsService,
                            ILogger<MainViewModel>? logger = null,
                            JsonConfigService? jsonConfigService = null,
-                           SqliteDatabaseService? databaseService = null) : this()
+                           SqliteDatabaseService? databaseService = null,
+                           WindowsServiceController? serviceController = null) : this()
         {
             _fileMonitoringService = fileMonitoringService;
             _printingService = printingService;
@@ -73,6 +75,7 @@ namespace PrintHero.UI.ViewModels
             _logger = logger;
             _jsonConfigService = jsonConfigService;
             _databaseService = databaseService;
+            _serviceController = serviceController ?? new WindowsServiceController();
 
             // Subscribe to file processing events
             _fileMonitoringService.FileProcessed += OnFileProcessed;
@@ -136,14 +139,12 @@ namespace PrintHero.UI.ViewModels
             get => _isServiceRunning;
             set
             {
-                if (SetProperty(ref _isServiceRunning, value))
-                {
-                    _logger?.LogInformation("IsServiceRunning changed to: {IsRunning}", value);
-                }
+                SetProperty(ref _isServiceRunning, value);
             }
         }
 
         public ObservableCollection<MonitoredFolder> MonitoredFolders { get; }
+        public ObservableCollection<PrintJobConfiguration> PrintJobConfigurations { get; set; }
 
         public ICommand StartServiceCommand { get; }
         public ICommand StopServiceCommand { get; }
@@ -154,21 +155,15 @@ namespace PrintHero.UI.ViewModels
         {
             try
             {
-                _logger?.LogInformation("Starting ViewModel initialization...");
-                
                 // Load settings first
                 await LoadSettingsAsync();
                 
                 // Force refresh all UI properties
                 RefreshAllUIProperties();
-                
-                _logger?.LogInformation("ViewModel initialization completed successfully");
-                _logger?.LogInformation("Final state - Printer: {Printer}, IsServiceRunning: {IsRunning}, Folders: {FolderCount}", 
-                    DefaultPrinter, IsServiceRunning, MonitoredFolders.Count);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error during ViewModel initialization");
+                // Error during ViewModel initialization
             }
         }
 
@@ -200,9 +195,6 @@ namespace PrintHero.UI.ViewModels
                 FilesProcessedToday = ShouldResetDailyStats(settings) ? 0 : settings.FilesProcessedToday;
                 PrintingErrorsToday = ShouldResetDailyStats(settings) ? 0 : settings.PrintingErrors;
                 
-                // Log loaded statistics
-                _logger?.LogInformation("Loaded statistics from settings: {ProcessedCount} processed, {ErrorCount} errors", 
-                    FilesProcessedToday, PrintingErrorsToday);
 
                 // Load MonitoredFolders from JsonConfigService
                 MonitoredFolders.Clear();
@@ -213,7 +205,6 @@ namespace PrintHero.UI.ViewModels
                     {
                         MonitoredFolders.Add(folder);
                     }
-                    _logger?.LogInformation("Loaded {Count} monitored folders from JsonConfigService", monitoredFolders.Count);
                     OnPropertyChanged(nameof(FirstMonitoredFolder)); // Notify UI of folder change
                 }
                 else
@@ -223,22 +214,30 @@ namespace PrintHero.UI.ViewModels
                     {
                         MonitoredFolders.Add(folder);
                     }
-                    _logger?.LogInformation("Loaded {Count} monitored folders from AppSettingsService", settings.MonitoredFolders.Count);
                     OnPropertyChanged(nameof(FirstMonitoredFolder)); // Notify UI of folder change
                 }
 
-                SetupDefaultPrintingFolder();
+                // Load PrintJobConfigurations from settings
+                PrintJobConfigurations.Clear();
+                foreach (var printJobConfig in settings.PrintJobConfigurations)
+                {
+                    PrintJobConfigurations.Add(printJobConfig);
+                }
+
+                    
                 
-                _logger?.LogInformation("Settings loaded successfully - Printer: {Printer}, AutoStart: {AutoStart}, MonitoredFolders: {FolderCount}", 
-                    DefaultPrinter, _autoStartService, MonitoredFolders.Count);
-                
-                // Always auto-start the service (this is the desired behavior)
-                _logger?.LogInformation("Starting PrintHero monitoring service automatically...");
-                await AutoStartServiceAsync();
+                // Auto-start the service only if we have print jobs or folders configured
+                if (PrintJobConfigurations.Any() || MonitoredFolders.Any())
+                {
+                    await AutoStartServiceAsync();
+                }
+                else
+                {
+                }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Failed to load settings");
+                // Failed to load settings
             }
         }
 
@@ -253,7 +252,6 @@ namespace PrintHero.UI.ViewModels
             {
                 if (_databaseService == null)
                 {
-                    _logger?.LogWarning("Database service not available for loading daily statistics");
                     return;
                 }
 
@@ -278,12 +276,9 @@ namespace PrintHero.UI.ViewModels
 
                 PrintingErrorsToday = (int)todayFailedJobs;
 
-                _logger?.LogInformation("Loaded daily statistics: {ProcessedCount} processed, {ErrorCount} errors", 
-                    FilesProcessedToday, PrintingErrorsToday);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Failed to load daily statistics from database");
                 FilesProcessedToday = 0;
                 PrintingErrorsToday = 0;
             }
@@ -303,6 +298,7 @@ namespace PrintHero.UI.ViewModels
                     FilesProcessedToday = FilesProcessedToday,
                     PrintingErrors = PrintingErrorsToday,
                     MonitoredFolders = new List<MonitoredFolder>(), // Empty since we store these separately
+                    PrintJobConfigurations = PrintJobConfigurations.ToList(),
                     AutoStartService = _autoStartService, // Use the stored auto-start preference, not current running state
                     IsServiceEnabledByUser = _isServiceEnabledByUser, // Save user's toggle preference
                     LastResetDate = DateTime.Today
@@ -314,14 +310,12 @@ namespace PrintHero.UI.ViewModels
                 if (_jsonConfigService != null)
                 {
                     await _jsonConfigService.SaveMonitoredFoldersAsync(MonitoredFolders.ToList());
-                    _logger?.LogInformation("Saved {Count} monitored folders to JsonConfigService", MonitoredFolders.Count);
                 }
 
-                _logger?.LogInformation("Settings saved successfully");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Failed to save settings");
+                // Failed to save settings
             }
         }
 
@@ -329,94 +323,74 @@ namespace PrintHero.UI.ViewModels
         {
             try
             {
-                if (_fileMonitoringService == null)
+                _isServiceEnabledByUser = true;
+                
+                if (_serviceController == null)
                 {
-                    _logger?.LogWarning("File monitoring service not available - running in limited mode");
                     IsServiceRunning = false;
                     return;
-                }
-
-                if (!string.IsNullOrEmpty(DefaultPrinter))
-                {
-                    _printingService?.SetPrinterSettings(DefaultPrinter, PaperSize, "Portrait");
-                    _logger?.LogInformation("Configured printer: {Printer}", DefaultPrinter);
-                }
-                else
-                {
-                    _logger?.LogWarning("No printer configured");
                 }
                 
-                if (_printingService != null)
+                // Check if service is installed, install if needed
+                if (!await _serviceController.IsServiceInstalledAsync())
                 {
-                    _printingService.IsEnabled = true;
-                    _logger?.LogInformation("Printing service enabled");
+                    var installed = await _serviceController.InstallServiceAsync();
+                    if (!installed)
+                    {
+                        // Installation failed - likely missing exe or permissions
+                        IsServiceRunning = false;
+                        throw new InvalidOperationException("Failed to install Windows service. Service executable may be missing or insufficient permissions.");
+                    }
+                    
+                    // Wait a moment after installation
+                    await Task.Delay(2000);
                 }
-
-                // Ensure we have folders to monitor
-                if (!MonitoredFolders.Any())
+                
+                // Start the service
+                var serviceStarted = await _serviceController.StartServiceAsync();
+                if (serviceStarted)
                 {
-                    _logger?.LogWarning("No folders to monitor - service cannot start");
-                    IsServiceRunning = false;
-                    return;
-                }
-
-                // Only monitor the first (currently selected) folder
-                var currentFolder = MonitoredFolders.FirstOrDefault();
-                if (currentFolder != null)
-                {
-                    _logger?.LogInformation("Starting file monitoring for selected folder: {FolderPath}, DefaultPrinter: {Printer}", 
-                        currentFolder.FolderPath, DefaultPrinter);
-                    await _fileMonitoringService.StartMonitoringAsync(new[] { currentFolder });
+                    IsServiceRunning = true;
+                    await SaveSettingsAsync();
                 }
                 else
                 {
-                    _logger?.LogWarning("No folder selected to monitor");
-                    return;
+                    IsServiceRunning = false;
+                    throw new InvalidOperationException("Windows service failed to start. Check if PrintHero.Service.exe exists and has proper permissions.");
                 }
-                IsServiceRunning = true;
-                _isServiceEnabledByUser = true; // User chose to enable the service
-
-                await SaveSettingsAsync();
-                _logger?.LogInformation("? File monitoring service started successfully - IsServiceRunning: {IsRunning}", IsServiceRunning);
             }
-            catch (Exception ex)
+            catch
             {
-                _logger?.LogError(ex, "? Failed to start service");
                 IsServiceRunning = false;
             }
         }
+
 
         private async Task StopService()
         {
             try
             {
-                if (_fileMonitoringService == null)
+                _isServiceEnabledByUser = false;
+                
+                if (_serviceController == null)
                 {
-                    _logger?.LogWarning("File monitoring service not available");
+                    IsServiceRunning = false;
                     return;
                 }
-
-                // Disable printing
-                if (_printingService != null)
-                {
-                    _printingService.IsEnabled = false;
-                }
-
-                await _fileMonitoringService.StopMonitoringAsync();
+                
+                await _serviceController.StopServiceAsync();
                 IsServiceRunning = false;
-                _isServiceEnabledByUser = false; // User chose to disable the service
-
                 await SaveSettingsAsync();
-                _logger?.LogInformation("File monitoring service stopped");
             }
-            catch (Exception ex)
+            catch
             {
-                _logger?.LogError(ex, "Failed to stop service");
+                IsServiceRunning = false;
             }
         }
 
         private void OnFileProcessed(object? sender, FileProcessedEventArgs e)
         {
+            
             // Marshal to UI thread for proper UI updates
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(async () =>
             {
@@ -424,14 +398,12 @@ namespace PrintHero.UI.ViewModels
                 {
                     if (e.Success)
                     {
-                        _logger?.LogInformation($"File processed successfully: {e.FilePath}");
                         // Increment processed count and force UI update
                         _filesProcessedToday++;
                         OnPropertyChanged(nameof(FilesProcessedToday));
                     }
                     else
                     {
-                        _logger?.LogError($"File processing failed: {e.FilePath} - {e.ErrorMessage}");
                         // Increment error count and force UI update
                         _printingErrorsToday++;
                         OnPropertyChanged(nameof(PrintingErrorsToday));
@@ -449,7 +421,7 @@ namespace PrintHero.UI.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    _logger?.LogError(ex, "Error handling file processed event");
+                    // Error handling file processed event
                 }
             }));
         }
@@ -468,7 +440,6 @@ namespace PrintHero.UI.ViewModels
         public async Task RefreshStatisticsAsync()
         {
             await LoadDailyStatisticsAsync();
-            _logger?.LogInformation($"Statistics refreshed: {FilesProcessedToday} processed, {PrintingErrorsToday} errors");
         }
 
         private void RefreshAllUIProperties()
@@ -482,72 +453,6 @@ namespace PrintHero.UI.ViewModels
             OnPropertyChanged(nameof(PrintingErrorsToday));
         }
 
-        private void SetupDefaultPrintingFolder()
-        {
-            try
-            {
-                // Define the default printing folder path
-                string defaultPrintingPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
-                    "Printing");
-
-                // Always ensure the directory exists
-                if (!Directory.Exists(defaultPrintingPath))
-                {
-                    Directory.CreateDirectory(defaultPrintingPath);
-                    _logger?.LogInformation("?? Created default printing folder: {Path}", defaultPrintingPath);
-                }
-                else
-                {
-                    _logger?.LogInformation("?? Default printing folder already exists: {Path}", defaultPrintingPath);
-                }
-
-                bool folderExists = MonitoredFolders.Any(f => 
-                    string.Equals(f.FolderPath, defaultPrintingPath, StringComparison.OrdinalIgnoreCase));
-
-                if (!folderExists)
-                {
-
-                    var defaultFolder = new MonitoredFolder
-                    {
-                        FolderPath = defaultPrintingPath,
-                        FilePattern = "*.pdf", // Default to PDF files
-                        IncludeSubfolders = false,
-                        IsActive = true,
-                        CreatedAt = DateTime.Now
-                    };
-
-                    MonitoredFolders.Add(defaultFolder);
-                    OnPropertyChanged(nameof(FirstMonitoredFolder)); // Notify UI of folder change
-                    
-                    // Save the new folder to JsonConfigService
-                    Task.Run(async () =>
-                    {
-                        try
-                        {
-                            if (_jsonConfigService != null)
-                            {
-                                await _jsonConfigService.AddMonitoredFolderAsync(defaultFolder);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogError(ex, "Failed to save default folder to JsonConfigService");
-                        }
-                    });
-                    
-                    _logger?.LogInformation($"Added default printing folder to monitoring: {defaultPrintingPath}");
-                }
-                else
-                {
-                    _logger?.LogInformation($"Default printing folder already exists in monitored folders: {defaultPrintingPath}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Failed to set up default printing folder");
-            }
-        }
 
         private void SetupDefaultPrinter()
         {
@@ -556,7 +461,6 @@ namespace PrintHero.UI.ViewModels
 
                 if (!string.IsNullOrEmpty(DefaultPrinter) && DefaultPrinter != "No printer selected")
                 {
-                    _logger?.LogInformation($"Printer already configured: {DefaultPrinter}");
                     return;
                 }
 
@@ -564,7 +468,6 @@ namespace PrintHero.UI.ViewModels
                 if (!string.IsNullOrEmpty(systemDefaultPrinter))
                 {
                     DefaultPrinter = systemDefaultPrinter;
-                    _logger?.LogInformation($"Set system default printer: {systemDefaultPrinter}");
                     return;
                 }
 
@@ -574,18 +477,76 @@ namespace PrintHero.UI.ViewModels
                 {
                     var firstPrinter = availablePrinters.First();
                     DefaultPrinter = firstPrinter;
-                    _logger?.LogInformation($"Set first available printer: {firstPrinter}");
                     return;
                 }
 
                 // No printers found
                 DefaultPrinter = "No printer found";
-                _logger?.LogWarning("No printers found on the system");
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Failed to setup default printer");
                 DefaultPrinter = "Error detecting printer";
+            }
+        }
+
+        private async Task SetupDefaultPrintingFolder()
+        {
+            try
+            {
+                // Check if we already have monitored folders
+                if (MonitoredFolders?.Any() == true)
+                {
+                    return;
+                }
+
+                // Use the same default path pattern as FolderSettingsWindow
+                var defaultPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
+                    "PrintHero", 
+                    "Input"
+                );
+
+                // Create the directory if it doesn't exist
+                if (!Directory.Exists(defaultPath))
+                {
+                    Directory.CreateDirectory(defaultPath);
+                }
+
+                // Create default MonitoredFolder
+                var defaultFolder = new MonitoredFolder
+                {
+                    FolderPath = defaultPath,
+                    FilePattern = "*.pdf",
+                    IsActive = true,
+                    IncludeSubfolders = false,
+                    CreatedAt = DateTime.Now
+                };
+
+                // Add via JsonConfigService if available
+                if (_jsonConfigService != null)
+                {
+                    var addedFolder = await _jsonConfigService.AddMonitoredFolderAsync(defaultFolder);
+                    if (addedFolder != null)
+                    {
+                        MonitoredFolders.Add(addedFolder);
+                    }
+                }
+                else
+                {
+                    // Fallback: Add directly to collection with manual ID assignment
+                    defaultFolder.Id = 1;
+                    MonitoredFolders.Add(defaultFolder);
+                }
+
+                // Notify UI of changes
+                OnPropertyChanged(nameof(FirstMonitoredFolder));
+                
+                // Save settings
+                await SaveSettingsAsync();
+            }
+            catch (Exception ex)
+            {
+                // Failed to setup default printing folder
             }
         }
 
@@ -598,13 +559,12 @@ namespace PrintHero.UI.ViewModels
                 
                 if (!string.IsNullOrEmpty(defaultPrinter))
                 {
-                    _logger?.LogDebug($"System default printer found: {defaultPrinter}");
                     return defaultPrinter;
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error getting system default printer");
+                // Error getting system default printer
             }
             return null;
         }
@@ -620,13 +580,12 @@ namespace PrintHero.UI.ViewModels
                     if (IsPrinterValid(printerName))
                     {
                         printers.Add(printerName);
-                        _logger?.LogDebug($"Available printer found: {printerName}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "Error getting available printers");
+                // Error getting available printers
             }
             return printers;
         }
@@ -649,12 +608,10 @@ namespace PrintHero.UI.ViewModels
         {
             try
             {
-                _logger?.LogInformation("PrintHero auto-start initiated...");
                 
                 // Check if user wants the service enabled based on their last toggle preference
                 if (!_isServiceEnabledByUser)
                 {
-                    _logger?.LogInformation("Service disabled by user preference - skipping auto-start");
                     IsServiceRunning = false;
                     return;
                 }
@@ -662,40 +619,21 @@ namespace PrintHero.UI.ViewModels
                 // Brief delay to ensure all services are ready
                 await Task.Delay(100);
                 
-                // Ensure we have the required services
-                if (_fileMonitoringService == null)
+                // Ensure we have folders to monitor (Windows service will read these from settings)
+                if (MonitoredFolders == null || (!MonitoredFolders.Any() && !PrintJobConfigurations.Any()))
                 {
-                    _logger?.LogError("Cannot auto-start: FileMonitoringService is null - this is a critical error");
-                    return;
+                    await SetupDefaultPrintingFolder();
                 }
                 
-                if (_printingService == null)
-                {
-                    _logger?.LogError("Cannot auto-start: PrintingService is null - this is a critical error");
-                    return;
-                }
-                
-                // Ensure we have at least the default folder
-                if (MonitoredFolders == null || !MonitoredFolders.Any())
-                {
-                    _logger?.LogWarning("No monitored folders - creating default folder now");
-                    SetupDefaultPrintingFolder();
-                }
-                
-                // Now start the service
-                _logger?.LogInformation("Starting PrintHero monitoring with {FolderCount} folders...", MonitoredFolders?.Count ?? 0);
+                // Start the Windows service (it will handle monitoring)
                 await StartService();
                 
                 // Force UI update
                 RefreshAllUIProperties();
                 
-                _logger?.LogInformation("? PrintHero auto-start completed - IsServiceRunning: {IsRunning}", IsServiceRunning);
             }
             catch (Exception ex)
             {
-                _logger?.LogError(ex, "? Failed to auto-start PrintHero service - this should not happen");
-                
-                // Try to recover by ensuring service state is correct
                 IsServiceRunning = false;
             }
         }

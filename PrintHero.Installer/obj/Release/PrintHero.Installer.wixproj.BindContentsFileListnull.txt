@@ -17,6 +17,7 @@
 ..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.FileSystemGlobbing.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.Abstractions.dll
+..\PrintHero.Service\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.WindowsServices.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Abstractions.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Configuration.dll
@@ -36,6 +37,9 @@
 ..\PrintHero.UI\bin\Release\net8.0-windows\PdfSharp.System.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\PdfSharp.WPFonts.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.Core.dll
+..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.deps.json
+..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.dll
+..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.runtimeconfig.json
 ..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.UI.dll.config
 ..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.UI.deps.json
 ..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.UI.dll
@@ -45,6 +49,7 @@
 ..\PrintHero.UI\bin\Release\net8.0-windows\Serilog.Extensions.Hosting.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\Serilog.Extensions.Logging.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\Serilog.Sinks.File.dll
+..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.exe
 ..\PrintHero.UI\bin\Release\net8.0-windows\SQLitePCLRaw.batteries_v2.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\SQLitePCLRaw.core.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\SQLitePCLRaw.provider.e_sqlite3.dll
@@ -56,5 +61,6 @@
 ..\PrintHero.UI\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\System.IO.Pipelines.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\System.Management.dll
+..\PrintHero.Service\bin\Release\net8.0-windows\System.ServiceProcess.ServiceController.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\System.Text.Encodings.Web.dll
 ..\PrintHero.UI\bin\Release\net8.0-windows\System.Text.Json.dll

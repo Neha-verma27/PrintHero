@@ -24,6 +24,9 @@ public class PrintHeroBackgroundService : BackgroundService
         _fileMonitoringService = fileMonitoringService;
         _printingService = printingService;
         _jsonConfigService = jsonConfigService;
+        
+        // Subscribe to file processing events to log print jobs
+        _fileMonitoringService.FileProcessed += OnFileProcessed;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -194,6 +197,30 @@ public class PrintHeroBackgroundService : BackgroundService
         catch (Exception ex)
         {
             // Failed to create default folder
+        }
+    }
+
+    private async void OnFileProcessed(object? sender, FileProcessedEventArgs e)
+    {
+        try
+        {
+            // Update the count in AppSettings so UI can read it
+            var settings = await _appSettingsService.LoadSettingsAsync();
+            
+            if (e.Success)
+            {
+                settings.FilesProcessedToday++;
+            }
+            else
+            {
+                settings.PrintingErrors++;
+            }
+            
+            await _appSettingsService.SaveSettingsAsync(settings);
+        }
+        catch (Exception ex)
+        {
+            // Error updating settings
         }
     }
 }

@@ -7,6 +7,10 @@
       "RelativeMoniker": "D:0:0:{42493406-9B6B-423C-A108-9D47B7C78964}|PrintHero.Core\\PrintHero.Core.csproj|solutionrelative:printhero.core\\services\\windowsservicecontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{DD22BAE9-7C19-4311-8244-3392036899CD}|PrintHero.Service\\PrintHero.Service.csproj|c:\\projects\\printhero\\printhero\\printhero.service\\printherobackgroundservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DD22BAE9-7C19-4311-8244-3392036899CD}|PrintHero.Service\\PrintHero.Service.csproj|solutionrelative:printhero.service\\printherobackgroundservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|c:\\projects\\printhero\\printhero\\printhero.ui\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0BAB7BC7-3C96-4B87-9F70-EA6594E4608E}|PrintHero.UI\\PrintHero.UI.csproj|solutionrelative:printhero.ui\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -75,6 +79,19 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "PrintHeroBackgroundService.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\PrintHeroBackgroundService.cs",
+              "RelativeDocumentMoniker": "PrintHero.Service\\PrintHeroBackgroundService.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Service\\PrintHeroBackgroundService.cs",
+              "RelativeToolTip": "PrintHero.Service\\PrintHeroBackgroundService.cs",
+              "ViewState": "AgIAAMUAAAAAAAAAAAAiwNoAAABCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-10T18:30:38.968Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "MainWindow.xaml.cs",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\MainWindow.xaml.cs",
               "RelativeDocumentMoniker": "PrintHero.UI\\MainWindow.xaml.cs",
@@ -87,20 +104,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "MainViewModel.cs",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\ViewModels\\MainViewModel.cs",
               "RelativeDocumentMoniker": "PrintHero.UI\\ViewModels\\MainViewModel.cs",
               "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\ViewModels\\MainViewModel.cs",
               "RelativeToolTip": "PrintHero.UI\\ViewModels\\MainViewModel.cs",
-              "ViewState": "AgIAACoAAAAAAAAAAAAEwD4AAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAACwAAAAAAAAAAAAEwEAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-07-24T12:51:35.163Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "MainWindow.xaml",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\MainWindow.xaml",
               "RelativeDocumentMoniker": "PrintHero.UI\\MainWindow.xaml",
@@ -112,7 +129,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "PrintHero.Uninstaller.csproj",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Uninstaller\\PrintHero.Uninstaller.csproj",
               "RelativeDocumentMoniker": "PrintHero.Uninstaller\\PrintHero.Uninstaller.csproj",
@@ -124,7 +141,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "PrinterSettingsWindow.xaml",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\Views\\PrinterSettingsWindow.xaml",
               "RelativeDocumentMoniker": "PrintHero.UI\\Views\\PrinterSettingsWindow.xaml",
@@ -136,7 +153,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
+              "Title": "WindowsServiceController.cs",
+              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Services\\WindowsServiceController.cs",
+              "RelativeDocumentMoniker": "PrintHero.Core\\Services\\WindowsServiceController.cs",
+              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Services\\WindowsServiceController.cs",
+              "RelativeToolTip": "PrintHero.Core\\Services\\WindowsServiceController.cs",
+              "ViewState": "AgIAAKUBAAAAAAAAAAAAwNAAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-09T16:01:56.869Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "FileMonitoringService.cs",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Services\\FileMonitoringService.cs",
               "RelativeDocumentMoniker": "PrintHero.Core\\Services\\FileMonitoringService.cs",
@@ -149,20 +179,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "WindowsServiceController.cs",
-              "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Services\\WindowsServiceController.cs",
-              "RelativeDocumentMoniker": "PrintHero.Core\\Services\\WindowsServiceController.cs",
-              "ToolTip": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Services\\WindowsServiceController.cs",
-              "RelativeToolTip": "PrintHero.Core\\Services\\WindowsServiceController.cs",
-              "ViewState": "AgIAAL4AAAAAAAAAAAAmwNAAAAAEAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-09T16:01:56.869Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "App.xaml.cs",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\App.xaml.cs",
               "RelativeDocumentMoniker": "PrintHero.UI\\App.xaml.cs",
@@ -175,7 +192,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "PrintHero.UI.csproj",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\PrintHero.UI.csproj",
               "RelativeDocumentMoniker": "PrintHero.UI\\PrintHero.UI.csproj",
@@ -187,7 +204,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "PrintingService.cs",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Services\\PrintingService.cs",
               "RelativeDocumentMoniker": "PrintHero.Core\\Services\\PrintingService.cs",
@@ -200,7 +217,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "JsonConfigService.cs",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Services\\JsonConfigService.cs",
               "RelativeDocumentMoniker": "PrintHero.Core\\Services\\JsonConfigService.cs",
@@ -213,7 +230,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "SqliteDatabaseService.cs",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Data\\SqliteDatabaseService.cs",
               "RelativeDocumentMoniker": "PrintHero.Core\\Data\\SqliteDatabaseService.cs",
@@ -226,7 +243,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "PrinterSettingsWindow.xaml.cs",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.UI\\Views\\PrinterSettingsWindow.xaml.cs",
               "RelativeDocumentMoniker": "PrintHero.UI\\Views\\PrinterSettingsWindow.xaml.cs",
@@ -239,7 +256,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "AppSettings.cs",
               "DocumentMoniker": "C:\\Projects\\PrintHero\\PrintHero\\PrintHero.Core\\Models\\AppSettings.cs",
               "RelativeDocumentMoniker": "PrintHero.Core\\Models\\AppSettings.cs",

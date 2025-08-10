@@ -9,6 +9,8 @@ using PrintHero.Core.Services;
 using PrintHero.Core.Data;
 using System.IO;
 using System.Drawing.Printing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace PrintHero.UI.ViewModels
 {
@@ -83,6 +85,9 @@ namespace PrintHero.UI.ViewModels
             // Default printer will be set up after loading settings
 
             InitializationTask = InitializeAsync();
+            
+            // Start periodic statistics refresh
+            StartPeriodicStatisticsRefresh();
         }
 
 
@@ -440,6 +445,44 @@ namespace PrintHero.UI.ViewModels
         public async Task RefreshStatisticsAsync()
         {
             await LoadDailyStatisticsAsync();
+        }
+
+        private void StartPeriodicStatisticsRefresh()
+        {
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    try
+                    {
+                        await Task.Delay(5000); // Refresh every 5 seconds
+                        
+                        // Only refresh if service is running
+                        if (IsServiceRunning && _appSettingsService != null)
+                        {
+                            await RefreshStatisticsFromSettings();
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore errors in background task
+                    }
+                }
+            });
+        }
+
+        private async Task RefreshStatisticsFromSettings()
+        {
+            try
+            {
+                var settings = await _appSettingsService.LoadSettingsAsync();
+                FilesProcessedToday = settings.FilesProcessedToday;
+                PrintingErrorsToday = settings.PrintingErrors;
+            }
+            catch
+            {
+                // Error refreshing statistics
+            }
         }
 
         private void RefreshAllUIProperties()

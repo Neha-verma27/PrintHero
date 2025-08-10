@@ -14,7 +14,7 @@ public class SqliteDatabaseService : IDisposable
     {
         _logger = logger;
 
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         var dbDirectory = Path.Combine(appDataPath, "PrintHero");
         Directory.CreateDirectory(dbDirectory);
 

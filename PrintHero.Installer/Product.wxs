@@ -1,327 +1,525 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
-	<!-- Main Product Definition -->
-	<Product Id="*"
-			 Name="PrintHero"
-			 Language="1033"
-			 Version="1.0.0.0"
-			 Manufacturer="PrintHero"
-			 UpgradeCode="12345678-1234-1234-1234-123456789012">
+    <!-- Main Product Definition -->
+    <Product Id="*"
+             Name="PrintHero"
+             Language="1033"
+             Version="1.0.0.0"
+             Manufacturer="PrintHero"
+             UpgradeCode="12345678-1234-1234-1234-123456789012">
 
-		<!-- Package Information -->
-		<Package InstallerVersion="200"
-				 Compressed="yes"
-				 InstallScope="perMachine"
-				 Description="PrintHero - Automatic PDF Printer"
-				 Comments="Complete PDF printing and monitoring solution"
-				 Manufacturer="PrintHero"
-				 Platform="x64"
-				 InstallPrivileges="elevated" />
+        <!-- Package Information -->
+        <Package InstallerVersion="200"
+                 Compressed="yes"
+                 InstallScope="perMachine"
+                 Description="PrintHero - Automatic PDF Printer"
+                 Comments="Complete PDF printing and monitoring solution"
+                 Manufacturer="PrintHero"
+                 Platform="x64"
+                 InstallPrivileges="elevated"
+                 AdminImage="no"
+                 ReadOnly="no" />
 
-		<!-- Upgrade Logic -->
-		<MajorUpgrade DowngradeErrorMessage="A newer version of PrintHero is already installed." />
-		<MediaTemplate EmbedCab="yes" />
+        <!-- Upgrade Logic -->
+        <MajorUpgrade DowngradeErrorMessage="A newer version of PrintHero is already installed." />
+        <MediaTemplate EmbedCab="yes" />
 
-		<!-- Custom Properties -->
-		<Property Id="ARPPRODUCTICON" Value="PrintHeroIcon.exe" />
-		<Property Id="ARPNOREPAIR" Value="1" />
-		
-		<!-- Require Administrator privileges for service installation -->
-		<Property Id="MSIUSEREALADMINDETECTION" Value="1" />
+        <!-- Admin Rights Check -->
+        <Condition Message="This application requires administrator privileges to install. Please right-click the installer and select 'Run as administrator'.">
+            <![CDATA[Privileged]]>
+        </Condition>
 
-		<!-- Features -->
-		<Feature Id="CoreFeature" Title="PrintHero Core Application" Level="1" Description="Main PrintHero application components">
-			<ComponentRef Id="CoreApplicationFiles" />
-			<ComponentRef Id="NativeLibraries" />
-			<ComponentRef Id="SQLiteRuntimeWin64" />
-			<ComponentRef Id="SQLiteRuntimeWin32" />
-			<ComponentRef Id="WinRuntimeLibs" />
-			<ComponentRef Id="ApplicationShortcut" />
-			<ComponentRef Id="ProgramMenuDir" />
-		</Feature>
+        <!-- Custom Properties -->
+        <Property Id="ARPPRODUCTICON" Value="PrintHeroIcon.exe" />
+        <Property Id="ARPNOREPAIR" Value="1" />
 
-		<Feature Id="DesktopShortcut" Title="Desktop Shortcut" Level="1" Description="Create desktop shortcut">
-			<ComponentRef Id="DesktopShortcut" />
-		</Feature>
+        <!-- Features -->
+        <Feature Id="CoreFeature" Title="PrintHero Core Application" Level="1" Description="Main PrintHero application components">
+            <ComponentRef Id="MainAppFiles" />
+            <ComponentRef Id="CoreRuntimeFiles" />
+            <ComponentRef Id="WpfRuntimeFiles" />
+            <ComponentRef Id="WindowsFormsFiles" />
+            <ComponentRef Id="ExtensionsFiles" />
+            <ComponentRef Id="ServiceManagementFiles" />
+            <ComponentRef Id="NativeRuntimeFiles" />
+            <ComponentRef Id="AdditionalRuntimeFiles" />
+            <ComponentRef Id="ApplicationShortcut" />
+        </Feature>
 
-		<Feature Id="AutoStartup" Title="Auto-start with Windows" Level="1" Description="Automatically start PrintHero when Windows starts">
-			<ComponentRef Id="AutoStartupRegistry" />
-		</Feature>
+        <Feature Id="DesktopShortcut" Title="Desktop Shortcut" Level="1" Description="Create desktop shortcut">
+            <ComponentRef Id="DesktopShortcut" />
+        </Feature>
 
-		<Feature Id="BackgroundService" Title="Background Service" Level="1" Description="Install PrintHero as a Windows background service (requires administrator privileges)">
-			<ComponentRef Id="ServiceInstallation" />
-		</Feature>
+        <Feature Id="AutoStartup" Title="Auto-start with Windows" Level="1" Description="Automatically start PrintHero when Windows starts">
+            <ComponentRef Id="AutoStartupRegistry" />
+        </Feature>
 
-		<!-- UI Configuration -->
-		<UIRef Id="WixUI_InstallDir" />
-		<Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+        <!-- UI Configuration -->
+        <UIRef Id="WixUI_InstallDir" />
+        <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
 
-		<!-- Custom Icons -->
-		<Icon Id="PrintHeroIcon.exe" SourceFile="..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.UI.exe" />
+        <!-- Custom Icons -->
+        <Icon Id="PrintHeroIcon.exe" SourceFile="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.exe" />
 
-	</Product>
+    </Product>
 
-	<!-- Directory Structure -->
-	<Fragment>
-		<Directory Id="TARGETDIR" Name="SourceDir">
-			<!-- Program Files -->
-			<Directory Id="ProgramFiles64Folder">
-				<Directory Id="INSTALLFOLDER" Name="PrintHero">
-					<Directory Id="X64FOLDER" Name="x64" />
-				</Directory>
-			</Directory>
+    <!-- Directory Structure -->
+    <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <!-- Program Files -->
+            <Directory Id="ProgramFiles64Folder">
+                <Directory Id="INSTALLFOLDER" Name="PrintHero" />
+            </Directory>
 
-			<!-- Start Menu -->
-			<Directory Id="ProgramMenuFolder">
-				<Directory Id="ApplicationProgramsFolder" Name="PrintHero" />
-			</Directory>
+            <!-- Start Menu -->
+            <Directory Id="ProgramMenuFolder">
+                <Directory Id="ApplicationProgramsFolder" Name="PrintHero" />
+            </Directory>
 
-			<!-- Desktop -->
-			<Directory Id="DesktopFolder" Name="Desktop" />
-		</Directory>
-	</Fragment>
+            <!-- Desktop -->
+            <Directory Id="DesktopFolder" Name="Desktop" />
+        </Directory>
+    </Fragment>
 
-	<!-- Core Application Files -->
-	<Fragment>
-		<DirectoryRef Id="INSTALLFOLDER">
-			<Component Id="CoreApplicationFiles" Guid="11111111-1111-1111-1111-111111111111">
-				
-				<!-- Main Executable -->
-				<File Id="PrintHeroUIExe" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.UI.exe" KeyPath="yes" />
-				<File Id="PrintHeroUIDll" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.UI.dll" />
-				<File Id="PrintHeroUIDeps" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.UI.deps.json" />
-				<File Id="PrintHeroUIRuntime" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.UI.runtimeconfig.json" />
-				<File Id="PrintHeroUIConfig" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.UI.dll.config" />
-				
-				<!-- Core Library -->
-				<File Id="PrintHeroCore" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PrintHero.Core.dll" />
-				
-				<!-- Background Service Files -->
-				<File Id="PrintHeroServiceDll" Source="..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.dll" />
-				<File Id="PrintHeroServiceDeps" Source="..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.deps.json" />
-				<File Id="PrintHeroServiceRuntime" Source="..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.runtimeconfig.json" />
-				
-				<!-- Service Dependencies (not already in UI) -->
-				<File Id="MSExtHostingWindowsServices" Source="..\PrintHero.Service\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.WindowsServices.dll" />
-				<File Id="SystemServiceProcess" Source="..\PrintHero.Service\bin\Release\net8.0-windows\System.ServiceProcess.ServiceController.dll" />
-				
-				<!-- PDF Processing -->
-				<File Id="PdfiumViewer" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PdfiumViewer.dll" />
-				<File Id="PdfSharp" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PdfSharp.dll" />
-				<File Id="PdfSharpCharting" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PdfSharp.Charting.dll" />
-				<File Id="PdfSharpQuality" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PdfSharp.Quality.dll" />
-				<File Id="PdfSharpSystem" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PdfSharp.System.dll" />
-				<File Id="PdfSharpWPFonts" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PdfSharp.WPFonts.dll" />
-				
-				<!-- Microsoft Extensions -->
-				<File Id="MSExtConfig" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.dll" />
-				<File Id="MSExtConfigAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.Abstractions.dll" />
-				<File Id="MSExtConfigBinder" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.Binder.dll" />
-				<File Id="MSExtConfigCommandLine" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.CommandLine.dll" />
-				<File Id="MSExtConfigEnvVars" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.EnvironmentVariables.dll" />
-				<File Id="MSExtConfigFileExtensions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.FileExtensions.dll" />
-				<File Id="MSExtConfigJson" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.Json.dll" />
-				<File Id="MSExtConfigUserSecrets" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Configuration.UserSecrets.dll" />
-				<File Id="MSExtDI" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.DependencyInjection.dll" />
-				<File Id="MSExtDIAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
-				<File Id="MSExtDiagnostics" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Diagnostics.dll" />
-				<File Id="MSExtDiagnosticsAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Diagnostics.Abstractions.dll" />
-				<File Id="MSExtFileProviders" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.FileProviders.Abstractions.dll" />
-				<File Id="MSExtFileProvidersPhysical" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.FileProviders.Physical.dll" />
-				<File Id="MSExtFileSystemGlobbing" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.FileSystemGlobbing.dll" />
-				<File Id="MSExtHosting" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.dll" />
-				<File Id="MSExtHostingAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Hosting.Abstractions.dll" />
-				<File Id="MSExtLogging" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.dll" />
-				<File Id="MSExtLoggingAbstractions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Abstractions.dll" />
-				<File Id="MSExtLoggingConfig" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Configuration.dll" />
-				<File Id="MSExtLoggingConsole" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Console.dll" />
-				<File Id="MSExtLoggingDebug" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.Debug.dll" />
-				<File Id="MSExtLoggingEventLog" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.EventLog.dll" />
-				<File Id="MSExtLoggingEventSource" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Logging.EventSource.dll" />
-				<File Id="MSExtOptions" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Options.dll" />
-				<File Id="MSExtOptionsConfigExt" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Options.ConfigurationExtensions.dll" />
-				<File Id="MSExtPrimitives" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Extensions.Primitives.dll" />
-				
-				<!-- Serilog Logging -->
-				<File Id="Serilog" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Serilog.dll" />
-				<File Id="SerilogExtHosting" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Serilog.Extensions.Hosting.dll" />
-				<File Id="SerilogExtLogging" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Serilog.Extensions.Logging.dll" />
-				<File Id="SerilogSinksFile" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Serilog.Sinks.File.dll" />
-				
-				<!-- System Libraries -->
-				<File Id="SystemManagement" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.Management.dll" />
-				<File Id="SystemDiagnosticsDiagnosticSource" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.Diagnostics.DiagnosticSource.dll" />
-				<File Id="SystemDiagnosticsEventLog" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.Diagnostics.EventLog.dll" />
-				<File Id="SystemIOPipelines" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.IO.Pipelines.dll" />
-				<File Id="SystemTextEncodingsWeb" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.Text.Encodings.Web.dll" />
-				<File Id="SystemTextJson" Source="..\PrintHero.UI\bin\Release\net8.0-windows\System.Text.Json.dll" />
-				
-				<!-- SQLite -->
-				<File Id="MicrosoftDataSqlite" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Microsoft.Data.Sqlite.dll" />
-				<File Id="SQLitePCLRawBatteries" Source="..\PrintHero.UI\bin\Release\net8.0-windows\SQLitePCLRaw.batteries_v2.dll" />
-				<File Id="SQLitePCLRawCore" Source="..\PrintHero.UI\bin\Release\net8.0-windows\SQLitePCLRaw.core.dll" />
-				<File Id="SQLitePCLRawProvider" Source="..\PrintHero.UI\bin\Release\net8.0-windows\SQLitePCLRaw.provider.e_sqlite3.dll" />
-				
-				<!-- WPF Notify Icon -->
-				<File Id="HardcodedNotifyIcon" Source="..\PrintHero.UI\bin\Release\net8.0-windows\Hardcodet.NotifyIcon.Wpf.dll" />
-				
-				<!-- PdfSharp Additional Libraries -->
-				<File Id="PdfSharpSnippets" Source="..\PrintHero.UI\bin\Release\net8.0-windows\PdfSharp.Snippets.dll" />
-				
-				
-				
-			</Component>
-		</DirectoryRef>
-	</Fragment>
+    <!-- Main Application Files -->
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="MainAppFiles" Guid="11111111-1111-1111-1111-111111111111" Win64="yes">
+                <File Id="PrintHeroUIExe" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.exe" KeyPath="yes" />
+                <File Id="PrintHeroUIDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.dll" />
+                <File Id="PrintHeroCore" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.Core.dll" />
+                <File Id="PrintHeroUIDeps" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.deps.json" />
+                <File Id="PrintHeroUIRuntime" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.runtimeconfig.json" />
+                <File Id="PrintHeroUIConfig" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.dll.config" />
+                
+                <!-- Service files -->
+                <File Id="PrintHeroServiceDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.Service.dll" />
+                <File Id="PrintHeroServiceExe" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.Service.exe" />
+                <File Id="PrintHeroServiceDeps" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.Service.deps.json" />
+                <File Id="PrintHeroServiceRuntime" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.Service.runtimeconfig.json" />
+                
+                <!-- Third-party libraries -->
+                <File Id="HardcodedNotifyIcon" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Hardcodet.NotifyIcon.Wpf.dll" />
+                <File Id="PdfSharp" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PdfSharp.dll" />
+                <File Id="PdfSharpCharting" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PdfSharp.Charting.dll" />
+                <File Id="PdfSharpQuality" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PdfSharp.Quality.dll" />
+                <File Id="PdfSharpSnippets" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PdfSharp.Snippets.dll" />
+                <File Id="PdfSharpSystem" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PdfSharp.System.dll" />
+                <File Id="PdfSharpWPFonts" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PdfSharp.WPFonts.dll" />
+                <File Id="PdfiumViewer" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PdfiumViewer.dll" />
+                <File Id="Serilog" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Serilog.dll" />
+                <File Id="SerilogExtensionsHosting" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Serilog.Extensions.Hosting.dll" />
+                <File Id="SerilogExtensionsLogging" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Serilog.Extensions.Logging.dll" />
+                <File Id="SerilogSinksFile" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Serilog.Sinks.File.dll" />
+                <File Id="SerilogSinksConsole" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Serilog.Sinks.Console.dll" />
+                <File Id="MicrosoftDataSqlite" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Data.Sqlite.dll" />
+                <File Id="SQLitePCLRawBatteries" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\SQLitePCLRaw.batteries_v2.dll" />
+                <File Id="SQLitePCLRawCore" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\SQLitePCLRaw.core.dll" />
+                <File Id="SQLitePCLRawProvider" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\SQLitePCLRaw.provider.e_sqlite3.dll" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
 
-	<!-- Native Libraries -->
-	<Fragment>
-		<DirectoryRef Id="X64FOLDER">
-			<Component Id="NativeLibraries" Guid="22222222-2222-2222-2222-222222222222">
-				<File Id="PdfiumNative" Source="..\PrintHero.UI\bin\Release\net8.0-windows\x64\pdfium.dll" KeyPath="yes" />
-			</Component>
-		</DirectoryRef>
-	</Fragment>
+    <!-- Core .NET Runtime Files -->
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="CoreRuntimeFiles" Guid="22222222-2222-2222-2222-222222222222" Win64="yes">
+                <File Id="SystemPrivateCoreLib" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Private.CoreLib.dll" KeyPath="yes" />
+                <File Id="SystemRuntime" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.dll" />
+                <File Id="SystemRuntimeExtensions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.Extensions.dll" />
+                <File Id="SystemRuntimeInteropServices" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.InteropServices.dll" />
+                <File Id="SystemPrivateUri" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Private.Uri.dll" />
+                <File Id="SystemPrivateXml" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Private.Xml.dll" />
+                <File Id="SystemCollections" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Collections.dll" />
+                <File Id="SystemCore" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Core.dll" />
+                <File Id="SystemIO" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.dll" />
+                <File Id="SystemLinq" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Linq.dll" />
+                <File Id="SystemMemory" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Memory.dll" />
+                <File Id="SystemObjectModel" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ObjectModel.dll" />
+                <File Id="SystemReflection" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Reflection.dll" />
+                <File Id="SystemThreading" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.dll" />
+                <File Id="SystemThreadingTasks" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.Tasks.dll" />
+                <File Id="SystemTextJson" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Text.Json.dll" />
+                <File Id="SystemConsole" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Console.dll" />
+                <File Id="MicrosoftCSharp" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.CSharp.dll" />
+                <File Id="SystemTextEncodingsWeb" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Text.Encodings.Web.dll" />
+                <File Id="SystemDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.dll" />
+                <File Id="MscorLib" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\mscorlib.dll" />
+                <File Id="Netstandard" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\netstandard.dll" />
+                
+                <!-- Missing System.Diagnostics assemblies -->
+                <File Id="SystemDiagnosticsDebug" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.Debug.dll" />
+                <File Id="SystemDiagnosticsContracts" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.Contracts.dll" />
+                <File Id="SystemDiagnosticsFileVersionInfo" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.FileVersionInfo.dll" />
+                <File Id="SystemDiagnosticsStackTrace" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.StackTrace.dll" />
+                <File Id="SystemDiagnosticsTextWriterTraceListener" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.TextWriterTraceListener.dll" />
+                <File Id="SystemDiagnosticsTools" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.Tools.dll" />
+                <File Id="SystemDiagnosticsTraceSource" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.TraceSource.dll" />
+                <File Id="SystemDiagnosticsTracing" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.Tracing.dll" />
+                
+                <!-- Additional System assemblies that might be needed -->
+                <File Id="SystemAppContext" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.AppContext.dll" />
+                <File Id="SystemBuffers" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Buffers.dll" />
+                <File Id="SystemCollectionsConcurrent" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Collections.Concurrent.dll" />
+                <File Id="SystemCollectionsImmutable" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Collections.Immutable.dll" />
+                <File Id="SystemCollectionsNonGeneric" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Collections.NonGeneric.dll" />
+                <File Id="SystemCollectionsSpecialized" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Collections.Specialized.dll" />
+                <File Id="SystemComponentModelAnnotations" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ComponentModel.Annotations.dll" />
+                <File Id="SystemComponentModelDataAnnotations" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ComponentModel.DataAnnotations.dll" />
+                <File Id="SystemComponentModelEventBasedAsync" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ComponentModel.EventBasedAsync.dll" />
+                <File Id="SystemComponentModel" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ComponentModel.dll" />
+                <File Id="SystemDynamicRuntime" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Dynamic.Runtime.dll" />
+                <File Id="SystemGlobalization" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Globalization.dll" />
+                <File Id="SystemGlobalizationCalendars" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Globalization.Calendars.dll" />
+                <File Id="SystemGlobalizationExtensions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Globalization.Extensions.dll" />
+                <File Id="SystemIOFileSystemPrimitives" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.FileSystem.Primitives.dll" />
+                <File Id="SystemIOFileSystemDriveInfo" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.FileSystem.DriveInfo.dll" />
+                <File Id="SystemIOFileSystemWatcher" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.FileSystem.Watcher.dll" />
+                <File Id="SystemIOFileSystemAccessControl" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.FileSystem.AccessControl.dll" />
+                <File Id="SystemIOFileSystem" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.FileSystem.dll" />
+                <File Id="SystemIOIsolatedStorage" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.IsolatedStorage.dll" />
+                <File Id="SystemIOMemoryMappedFiles" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.MemoryMappedFiles.dll" />
+                <File Id="SystemIOPipesAccessControl" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.Pipes.AccessControl.dll" />
+                <File Id="SystemIOPipes" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.Pipes.dll" />
+                <File Id="SystemIOUnmanagedMemoryStream" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.UnmanagedMemoryStream.dll" />
+                <File Id="SystemLinqExpressions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Linq.Expressions.dll" />
+                <File Id="SystemLinqParallel" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Linq.Parallel.dll" />
+                <File Id="SystemLinqQueryable" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Linq.Queryable.dll" />
+                <File Id="SystemNumerics" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Numerics.dll" />
+                <File Id="SystemNumericsVectors" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Numerics.Vectors.dll" />
+                <File Id="SystemReflectionExtensions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Reflection.Extensions.dll" />
+                <File Id="SystemReflectionMetadata" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Reflection.Metadata.dll" />
+                <File Id="SystemReflectionPrimitives" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Reflection.Primitives.dll" />
+                <File Id="SystemReflectionTypeExtensions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Reflection.TypeExtensions.dll" />
+                <File Id="SystemReflectionDispatchProxy" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Reflection.DispatchProxy.dll" />
+                <File Id="SystemReflectionEmit" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Reflection.Emit.dll" />
+                <File Id="SystemReflectionEmitILGeneration" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Reflection.Emit.ILGeneration.dll" />
+                <File Id="SystemReflectionEmitLightweight" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Reflection.Emit.Lightweight.dll" />
+                <File Id="SystemRuntimeHandles" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.Handles.dll" />
+                <File Id="SystemRuntimeCompilerServicesUnsafe" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.CompilerServices.Unsafe.dll" />
+                <File Id="SystemRuntimeCompilerServicesVisualC" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.CompilerServices.VisualC.dll" />
+                <File Id="SystemRuntimeInteropServicesRuntimeInformation" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.InteropServices.RuntimeInformation.dll" />
+                <File Id="SystemRuntimeInteropServicesJavaScript" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.InteropServices.JavaScript.dll" />
+                <File Id="SystemRuntimeIntrinsics" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.Intrinsics.dll" />
+                <File Id="SystemRuntimeLoader" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.Loader.dll" />
+                <File Id="SystemRuntimeNumerics" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.Numerics.dll" />
+                <File Id="SystemRuntimeSerialization" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.Serialization.dll" />
+                <File Id="SystemRuntimeSerializationFormatters" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.Serialization.Formatters.dll" />
+                <File Id="SystemRuntimeSerializationJson" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.Serialization.Json.dll" />
+                <File Id="SystemRuntimeSerializationPrimitives" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.Serialization.Primitives.dll" />
+                <File Id="SystemRuntimeSerializationXml" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Runtime.Serialization.Xml.dll" />
+                <File Id="SystemTextEncodingCodePages" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Text.Encoding.CodePages.dll" />
+                <File Id="SystemTextEncodingExtensions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Text.Encoding.Extensions.dll" />
+                <File Id="SystemTextEncoding" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Text.Encoding.dll" />
+                <File Id="SystemTextRegularExpressions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Text.RegularExpressions.dll" />
+                <File Id="SystemThreadingAccessControl" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.AccessControl.dll" />
+                <File Id="SystemThreadingChannels" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.Channels.dll" />
+                <File Id="SystemThreadingOverlapped" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.Overlapped.dll" />
+                <File Id="SystemThreadingTasksDataflow" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.Tasks.Dataflow.dll" />
+                <File Id="SystemThreadingTasksExtensions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.Tasks.Extensions.dll" />
+                <File Id="SystemThreadingTasksParallel" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.Tasks.Parallel.dll" />
+                <File Id="SystemThreadingThread" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.Thread.dll" />
+                <File Id="SystemThreadingThreadPool" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.ThreadPool.dll" />
+                <File Id="SystemThreadingTimer" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Threading.Timer.dll" />
+                <File Id="SystemValueTuple" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ValueTuple.dll" />
+                <File Id="SystemXmlLinq" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Xml.Linq.dll" />
+                <File Id="SystemXmlReaderWriter" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Xml.ReaderWriter.dll" />
+                <File Id="SystemXmlSerialization" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Xml.Serialization.dll" />
+                <File Id="SystemXmlXDocument" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Xml.XDocument.dll" />
+                <File Id="SystemXmlXPath" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Xml.XPath.dll" />
+                <File Id="SystemXmlXPathXDocument" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Xml.XPath.XDocument.dll" />
+                <File Id="SystemXmlXmlDocument" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Xml.XmlDocument.dll" />
+                <File Id="SystemXmlXmlSerializer" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Xml.XmlSerializer.dll" />
+                <File Id="SystemXml" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Xml.dll" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
 
-	<!-- SQLite Runtime Native Libraries -->
-	<Fragment>
-		<DirectoryRef Id="INSTALLFOLDER">
-			<Directory Id="RuntimesFolder" Name="runtimes">
-				<Directory Id="Win64RuntimeFolder" Name="win-x64">
-					<Directory Id="Win64NativeFolder" Name="native" />
-				</Directory>
-				<Directory Id="Win32RuntimeFolder" Name="win-x86">
-					<Directory Id="Win32NativeFolder" Name="native" />
-				</Directory>
-				<Directory Id="WinRuntimeFolder" Name="win">
-					<Directory Id="WinLibFolder" Name="lib">
-						<Directory Id="WinNet80Folder" Name="net8.0" />
-					</Directory>
-				</Directory>
-			</Directory>
-		</DirectoryRef>
-		
-		<DirectoryRef Id="Win64NativeFolder">
-			<Component Id="SQLiteRuntimeWin64" Guid="77777777-7777-7777-7777-777777777777">
-				<File Id="SQLiteWin64Native" Source="..\PrintHero.UI\bin\Release\net8.0-windows\runtimes\win-x64\native\e_sqlite3.dll" KeyPath="yes" />
-			</Component>
-		</DirectoryRef>
-		
-		<DirectoryRef Id="Win32NativeFolder">
-			<Component Id="SQLiteRuntimeWin32" Guid="88888888-8888-8888-8888-888888888888">
-				<File Id="SQLiteWin32Native" Source="..\PrintHero.UI\bin\Release\net8.0-windows\runtimes\win-x86\native\e_sqlite3.dll" KeyPath="yes" />
-			</Component>
-		</DirectoryRef>
-		
-		<DirectoryRef Id="WinNet80Folder">
-			<Component Id="WinRuntimeLibs" Guid="99999999-9999-9999-9999-999999999999" Win64="yes">
-				<File Id="SystemDiagnosticsEventLogMessages" Source="..\PrintHero.UI\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll" KeyPath="yes" />
-				<File Id="SystemDiagnosticsEventLogRuntime" Source="..\PrintHero.UI\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll" />
-			</Component>
-		</DirectoryRef>
-	</Fragment>
+    <!-- WPF Runtime Files -->
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="WpfRuntimeFiles" Guid="33333333-3333-3333-3333-333333333333" Win64="yes">
+                <File Id="PresentationCore" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationCore.dll" KeyPath="yes" />
+                <File Id="PresentationFramework" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework.dll" />
+                <File Id="WindowsBase" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\WindowsBase.dll" />
+                <File Id="PresentationNative" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationNative_cor3.dll" />
+                <File Id="SystemXaml" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Xaml.dll" />
+                <File Id="PresentationFrameworkSystemCore" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework-SystemCore.dll" />
+                <File Id="PresentationFrameworkSystemXml" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework-SystemXml.dll" />
+                <File Id="PresentationFrameworkSystemData" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework-SystemData.dll" />
+                <File Id="PresentationFrameworkSystemDrawing" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework-SystemDrawing.dll" />
+                <File Id="PresentationFrameworkSystemXmlLinq" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework-SystemXmlLinq.dll" />
+                <File Id="PresentationFrameworkAero" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework.Aero.dll" />
+                <File Id="PresentationFrameworkAero2" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework.Aero2.dll" />
+                <File Id="PresentationFrameworkAeroLite" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework.AeroLite.dll" />
+                <File Id="PresentationFrameworkClassic" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework.Classic.dll" />
+                <File Id="PresentationFrameworkLuna" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework.Luna.dll" />
+                <File Id="PresentationFrameworkRoyale" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework.Royale.dll" />
+                <File Id="PresentationUI" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationUI.dll" />
+                <File Id="ReachFramework" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\ReachFramework.dll" />
+                <File Id="SystemDrawingCommon" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Drawing.Common.dll" />
+                <File Id="SystemComponentModelPrimitives" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ComponentModel.Primitives.dll" />
+                <File Id="SystemComponentModelTypeConverter" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ComponentModel.TypeConverter.dll" />
+                <File Id="SystemPrinting" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Printing.dll" />
+                <File Id="SystemWindowsPresentation" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Windows.Presentation.dll" />
+                <File Id="SystemWindowsControlsRibbon" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Windows.Controls.Ribbon.dll" />
+                <File Id="SystemWindowsExtensions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Windows.Extensions.dll" />
+                <File Id="SystemWindowsDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Windows.dll" />
+                <File Id="SystemWindowsInputManipulations" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Windows.Input.Manipulations.dll" />
+                <File Id="D3DCompiler47" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\D3DCompiler_47_cor3.dll" />
+                <File Id="DirectWriteForwarder" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\DirectWriteForwarder.dll" />
+                <File Id="PenImc" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PenImc_cor3.dll" />
+                <File Id="WpfGfx" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\wpfgfx_cor3.dll" />
+                <File Id="VcRuntime140" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\vcruntime140_cor3.dll" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
 
-	<!-- Start Menu Shortcuts -->
-	<Fragment>
-		<DirectoryRef Id="ApplicationProgramsFolder">
-			<Component Id="ApplicationShortcut" Guid="33333333-3333-3333-3333-333333333333">
-				<Shortcut Id="StartMenuPrintHero"
-						  Name="PrintHero"
-						  Description="PrintHero - Automatic PDF Printer"
-						  Target="[INSTALLFOLDER]PrintHero.UI.exe"
-						  WorkingDirectory="INSTALLFOLDER"
-						  Icon="PrintHeroIcon.exe" />
-				<Shortcut Id="UninstallProduct"
-						  Name="Uninstall PrintHero"
-						  Target="[SystemFolder]msiexec.exe"
-						  Arguments="/x [ProductCode]"
-						  Description="Uninstalls PrintHero" />
-				<RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
-				<RegistryValue Root="HKCU"
-							   Key="Software\PrintHero\Installed"
-							   Name="startmenu"
-							   Type="integer"
-							   Value="1"
-							   KeyPath="yes" />
-			</Component>
-		</DirectoryRef>
+    <!-- Windows Forms Runtime Files -->
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="WindowsFormsFiles" Guid="77777777-7777-7777-7777-777777777777" Win64="yes">
+                <File Id="SystemWindowsForms" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Windows.Forms.dll" KeyPath="yes" />
+                <File Id="SystemWindowsFormsPrimitives" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Windows.Forms.Primitives.dll" />
+                <File Id="SystemWindowsFormsDesign" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Windows.Forms.Design.dll" />
+                <File Id="SystemWindowsFormsDesignEditors" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Windows.Forms.Design.Editors.dll" />
+                <File Id="WindowsFormsIntegration" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\WindowsFormsIntegration.dll" />
+                <File Id="Accessibility" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Accessibility.dll" />
+                <File Id="MicrosoftVisualBasicCore" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.VisualBasic.Core.dll" />
+                <File Id="MicrosoftVisualBasicForms" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.VisualBasic.Forms.dll" />
+                <File Id="MicrosoftVisualBasic" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.VisualBasic.dll" />
+                <File Id="SystemDesign" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Design.dll" />
+                <File Id="SystemDrawing" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Drawing.dll" />
+                <File Id="SystemDrawingDesign" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Drawing.Design.dll" />
+                <File Id="SystemDrawingPrimitives" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Drawing.Primitives.dll" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
 
-		<!-- Program Menu Directory -->
-		<DirectoryRef Id="ApplicationProgramsFolder">
-			<Component Id="ProgramMenuDir" Guid="44444444-4444-4444-4444-444444444444">
-				<RemoveFolder Id="ProgramMenuDir" On="uninstall" />
-				<RegistryValue Root="HKCU"
-							   Key="Software\PrintHero\Menu"
-							   Name="installed"
-							   Type="integer"
-							   Value="1"
-							   KeyPath="yes" />
-			</Component>
-		</DirectoryRef>
-	</Fragment>
+    <!-- Microsoft Extensions Files -->
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="ExtensionsFiles" Guid="44444444-4444-4444-4444-444444444444" Win64="yes">
+                <File Id="MSExtDI" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.DependencyInjection.dll" KeyPath="yes" />
+                <File Id="MSExtDIAbstractions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.DependencyInjection.Abstractions.dll" />
+                <File Id="MSExtConfig" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Configuration.dll" />
+                <File Id="MSExtConfigAbstractions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Configuration.Abstractions.dll" />
+                <File Id="MSExtHosting" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Hosting.dll" />
+                <File Id="MSExtHostingAbstractions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Hosting.Abstractions.dll" />
+                <File Id="MSExtHostingWindowsServices" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Hosting.WindowsServices.dll" />
+                <File Id="MSExtLogging" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Logging.dll" />
+                <File Id="MSExtLoggingAbstractions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Logging.Abstractions.dll" />
+                <File Id="MSExtLoggingConfiguration" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Logging.Configuration.dll" />
+                <File Id="MSExtLoggingConsole" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Logging.Console.dll" />
+                <File Id="MSExtLoggingDebug" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Logging.Debug.dll" />
+                <File Id="MSExtLoggingEventLog" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Logging.EventLog.dll" />
+                <File Id="MSExtLoggingEventSource" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Logging.EventSource.dll" />
+                <File Id="MSExtOptions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Options.dll" />
+                <File Id="MSExtOptionsConfigExt" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Options.ConfigurationExtensions.dll" />
+                <File Id="MSExtPrimitives" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Primitives.dll" />
+                <File Id="MSExtConfigBinder" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Configuration.Binder.dll" />
+                <File Id="MSExtConfigCommandLine" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Configuration.CommandLine.dll" />
+                <File Id="MSExtConfigEnvVars" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Configuration.EnvironmentVariables.dll" />
+                <File Id="MSExtConfigFileExtensions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Configuration.FileExtensions.dll" />
+                <File Id="MSExtConfigJson" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Configuration.Json.dll" />
+                <File Id="MSExtConfigUserSecrets" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Configuration.UserSecrets.dll" />
+                <File Id="MSExtDiagnostics" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Diagnostics.dll" />
+                <File Id="MSExtDiagnosticsAbstractions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.Diagnostics.Abstractions.dll" />
+                <File Id="MSExtFileProviders" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.FileProviders.Abstractions.dll" />
+                <File Id="MSExtFileProvidersPhysical" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.FileProviders.Physical.dll" />
+                <File Id="MSExtFileSystemGlobbing" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Extensions.FileSystemGlobbing.dll" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
 
-	<!-- Desktop Shortcut -->
-	<Fragment>
-		<DirectoryRef Id="DesktopFolder">
-			<Component Id="DesktopShortcut" Guid="55555555-5555-5555-5555-555555555555">
-				<Shortcut Id="DesktopShortcut"
-						  Name="PrintHero"
-						  Description="PrintHero - Automatic PDF Printer"
-						  Target="[INSTALLFOLDER]PrintHero.UI.exe"
-						  WorkingDirectory="INSTALLFOLDER"
-						  Icon="PrintHeroIcon.exe" />
-				<RegistryValue Root="HKCU"
-							   Key="Software\PrintHero\Desktop"
-							   Name="installed"
-							   Type="integer"
-							   Value="1"
-							   KeyPath="yes" />
-			</Component>
-		</DirectoryRef>
-	</Fragment>
+    <!-- Service Management Files -->
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="ServiceManagementFiles" Guid="55555555-5555-5555-5555-555555555555" Win64="yes">
+                <File Id="SystemManagement" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Management.dll" KeyPath="yes" />
+                <File Id="SystemServiceProcessServiceController" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ServiceProcess.ServiceController.dll" />
+                <File Id="SystemServiceProcess" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ServiceProcess.dll" />
+                <File Id="SystemDiagnosticsEventLog" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.EventLog.dll" />
+                <File Id="SystemDiagnosticsEventLogMessages" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.EventLog.Messages.dll" />
+                <File Id="SystemDiagnosticsDiagnosticSourceSM" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.DiagnosticSource.dll" />
+                <File Id="SystemDiagnosticsProcessSM" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.Process.dll" />
+                <File Id="MicrosoftWin32RegistrySM" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Win32.Registry.dll" />
+                <File Id="MicrosoftWin32SystemEventsSM" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Win32.SystemEvents.dll" />
+                <File Id="SystemSecurityAccessControlSM" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.AccessControl.dll" />
+                <File Id="SystemSecurityPrincipalWindowsSM" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Principal.Windows.dll" />
+                <File Id="SystemIOPipelinesSM" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.Pipelines.dll" />
+                <File Id="MicrosoftWin32PrimitivesSM" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Win32.Primitives.dll" />
+                <File Id="MicrosoftWin32RegistryAccessControlSM" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.Win32.Registry.AccessControl.dll" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
 
-	<!-- Auto-startup Registry Entry -->
-	<Fragment>
-		<DirectoryRef Id="INSTALLFOLDER">
-			<Component Id="AutoStartupRegistry" Guid="66666666-6666-6666-6666-666666666666">
-				<RegistryValue Root="HKCU"
-							   Key="Software\Microsoft\Windows\CurrentVersion\Run"
-							   Name="PrintHero"
-							   Type="string"
-							   Value='"[INSTALLFOLDER]PrintHero.UI.exe" -minimized'
-							   KeyPath="yes" />
-			</Component>
-		</DirectoryRef>
-	</Fragment>
+    <!-- Native Runtime Files -->
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="NativeRuntimeFiles" Guid="66666666-6666-6666-6666-666666666666" Win64="yes">
+                <File Id="CoreCLR" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\coreclr.dll" KeyPath="yes" />
+                <File Id="ClrJit" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\clrjit.dll" />
+                <File Id="HostPolicy" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\hostpolicy.dll" />
+                <File Id="HostFxr" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\hostfxr.dll" />
+                <File Id="ESqlite3" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\e_sqlite3.dll" />
+                <File Id="ClrEtwRc" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\clretwrc.dll" />
+                <File Id="ClrGc" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\clrgc.dll" />
+                <File Id="MscorDacCore" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\mscordaccore.dll" />
+                <File Id="MscorDbi" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\mscordbi.dll" />
+                <File Id="MscorRc" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\mscorrc.dll" />
+                <File Id="MsQuic" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\msquic.dll" />
+                <File Id="CreatedDump" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\createdump.exe" />
+                <File Id="MscordacCoreAmd64" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\mscordaccore_amd64_amd64_8.0.1725.26602.dll" />
+                <File Id="MicrosoftDiaSymReaderNative" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\Microsoft.DiaSymReader.Native.amd64.dll" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
 
-	<!-- Background Service Installation -->
-	<Fragment>
-		<DirectoryRef Id="INSTALLFOLDER">
-			<Component Id="ServiceInstallation" Guid="AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE">
-				<ServiceInstall Id="PrintHeroBackgroundService"
-								Name="PrintHeroBackgroundService"
-								DisplayName="PrintHero Background Service"
-								Description="Monitors folders and automatically prints PDF files when PrintHero toggle is enabled"
-								Type="ownProcess"
-								Start="demand"
-								Account="LocalSystem"
-								ErrorControl="normal"
-								Interactive="no">
-					<ServiceDependency Id="Spooler" />
-				</ServiceInstall>
-				
-				<ServiceControl Id="PrintHeroServiceControl"
-								Name="PrintHeroBackgroundService"
-								Stop="both"
-								Remove="uninstall"
-								Wait="no" />
-				
-				<File Id="ServiceExecutable" 
-					  Source="..\PrintHero.Service\bin\Release\net8.0-windows\PrintHero.Service.exe"
-					  KeyPath="yes" />
-			</Component>
-		</DirectoryRef>
-	</Fragment>
+    <!-- Additional Runtime Files -->
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="AdditionalRuntimeFiles" Guid="88888888-8888-8888-8888-888888888888" Win64="yes">
+                <File Id="SystemIOCompressionNative" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.Compression.Native.dll" KeyPath="yes" />
+                <File Id="UIAutomationClient" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\UIAutomationClient.dll" />
+                <File Id="UIAutomationProvider" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\UIAutomationProvider.dll" />
+                <File Id="UIAutomationTypes" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\UIAutomationTypes.dll" />
+                <File Id="UIAutomationClientSideProviders" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\UIAutomationClientSideProviders.dll" />
+                <File Id="SystemIOPackaging" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.Packaging.dll" />
+                <File Id="SystemConfigurationConfigurationManager" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Configuration.ConfigurationManager.dll" />
+                <File Id="SystemConfiguration" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Configuration.dll" />
+                <File Id="SystemCodeDom" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.CodeDom.dll" />
+                <File Id="SystemData" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Data.dll" />
+                <File Id="SystemDataCommon" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Data.Common.dll" />
+                <File Id="SystemDataDataSetExtensions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Data.DataSetExtensions.dll" />
+                <File Id="SystemDirectoryServices" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.DirectoryServices.dll" />
+                <File Id="SystemWeb" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Web.dll" />
+                <File Id="SystemWebHttpUtility" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Web.HttpUtility.dll" />
+                <File Id="SystemDiagnosticsPerformanceCounter" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Diagnostics.PerformanceCounter.dll" />
+                <File Id="SystemSecurityPermissions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Permissions.dll" />
+                <File Id="SystemResourcesExtensions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Resources.Extensions.dll" />
+                
+                <!-- Additional IO and compression libraries -->
+                <File Id="SystemIOCompression" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.Compression.dll" />
+                <File Id="SystemIOCompressionBrotli" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.Compression.Brotli.dll" />
+                <File Id="SystemIOCompressionFileSystem" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.Compression.FileSystem.dll" />
+                <File Id="SystemIOCompressionZipFile" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.IO.Compression.ZipFile.dll" />
+                
+                <!-- Format libraries -->
+                <File Id="SystemFormatsAsn1" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Formats.Asn1.dll" />
+                <File Id="SystemFormatsTar" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Formats.Tar.dll" />
+                
+                <!-- Additional system libraries -->
+                <File Id="SystemResourcesReader" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Resources.Reader.dll" />
+                <File Id="SystemResourcesResourceManager" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Resources.ResourceManager.dll" />
+                <File Id="SystemResourcesWriter" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Resources.Writer.dll" />
+                
+                <!-- Security libraries -->
+                <File Id="SystemSecurity" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.dll" />
+                <File Id="SystemSecurityClaims" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Claims.dll" />
+                <File Id="SystemSecurityPrincipal" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Principal.dll" />
+                <File Id="SystemSecuritySecureString" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.SecureString.dll" />
+                <File Id="SystemSecurityCryptography" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.dll" />
+                <File Id="SystemSecurityCryptographyAlgorithms" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.Algorithms.dll" />
+                <File Id="SystemSecurityCryptographyCng" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.Cng.dll" />
+                <File Id="SystemSecurityCryptographyCsp" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.Csp.dll" />
+                <File Id="SystemSecurityCryptographyEncoding" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.Encoding.dll" />
+                <File Id="SystemSecurityCryptographyOpenSsl" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.OpenSsl.dll" />
+                <File Id="SystemSecurityCryptographyPkcs" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.Pkcs.dll" />
+                <File Id="SystemSecurityCryptographyPrimitives" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.Primitives.dll" />
+                <File Id="SystemSecurityCryptographyProtectedData" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.ProtectedData.dll" />
+                <File Id="SystemSecurityCryptographyX509Certificates" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.X509Certificates.dll" />
+                <File Id="SystemSecurityCryptographyXml" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Security.Cryptography.Xml.dll" />
+                
+                <!-- Network libraries -->
+                <File Id="SystemNet" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.dll" />
+                <File Id="SystemNetHttp" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.Http.dll" />
+                <File Id="SystemNetHttpJson" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.Http.Json.dll" />
+                <File Id="SystemNetHttpListener" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.HttpListener.dll" />
+                <File Id="SystemNetMail" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.Mail.dll" />
+                <File Id="SystemNetNameResolution" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.NameResolution.dll" />
+                <File Id="SystemNetNetworkInformation" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.NetworkInformation.dll" />
+                <File Id="SystemNetPing" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.Ping.dll" />
+                <File Id="SystemNetPrimitives" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.Primitives.dll" />
+                <File Id="SystemNetQuic" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.Quic.dll" />
+                <File Id="SystemNetRequests" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.Requests.dll" />
+                <File Id="SystemNetSecurity" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.Security.dll" />
+                <File Id="SystemNetServicePoint" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.ServicePoint.dll" />
+                <File Id="SystemNetSockets" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.Sockets.dll" />
+                <File Id="SystemNetWebClient" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.WebClient.dll" />
+                <File Id="SystemNetWebHeaderCollection" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.WebHeaderCollection.dll" />
+                <File Id="SystemNetWebProxy" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.WebProxy.dll" />
+                <File Id="SystemNetWebSockets" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.WebSockets.dll" />
+                <File Id="SystemNetWebSocketsClient" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Net.WebSockets.Client.dll" />
+                
+                <!-- Transaction libraries -->
+                <File Id="SystemTransactions" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Transactions.dll" />
+                <File Id="SystemTransactionsLocal" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Transactions.Local.dll" />
+                
+                <!-- Service Model -->
+                <File Id="SystemServiceModelWeb" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.ServiceModel.Web.dll" />
+                
+                <!-- Private XML -->
+                <File Id="SystemPrivateDataContractSerialization" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Private.DataContractSerialization.dll" />
+                <File Id="SystemPrivateXmlLinq" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Private.Xml.Linq.dll" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+
+    <!-- Start Menu Shortcuts -->
+    <Fragment>
+        <DirectoryRef Id="ApplicationProgramsFolder">
+            <Component Id="ApplicationShortcut" Guid="99999999-9999-9999-9999-999999999999" Win64="yes">
+                <Shortcut Id="StartMenuPrintHero"
+                          Name="PrintHero"
+                          Description="PrintHero - Automatic PDF Printer"
+                          Target="[INSTALLFOLDER]PrintHero.UI.exe"
+                          WorkingDirectory="INSTALLFOLDER"
+                          Icon="PrintHeroIcon.exe" />
+                <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+                <RegistryValue Root="HKCU"
+                               Key="Software\PrintHero\Installed"
+                               Name="startmenu"
+                               Type="integer"
+                               Value="1"
+                               KeyPath="yes" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+
+    <!-- Desktop Shortcut -->
+    <Fragment>
+        <DirectoryRef Id="DesktopFolder">
+            <Component Id="DesktopShortcut" Guid="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" Win64="yes">
+                <Shortcut Id="DesktopShortcut"
+                          Name="PrintHero"
+                          Description="PrintHero - Automatic PDF Printer"
+                          Target="[INSTALLFOLDER]PrintHero.UI.exe"
+                          WorkingDirectory="INSTALLFOLDER"
+                          Icon="PrintHeroIcon.exe" />
+                <RegistryValue Root="HKCU"
+                               Key="Software\PrintHero\Desktop"
+                               Name="installed"
+                               Type="integer"
+                               Value="1"
+                               KeyPath="yes" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+
+    <!-- Auto-startup Registry Entry -->
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="AutoStartupRegistry" Guid="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" Win64="yes">
+                <RegistryValue Root="HKCU"
+                               Key="Software\Microsoft\Windows\CurrentVersion\Run"
+                               Name="PrintHero"
+                               Type="string"
+                               Value="&quot;[INSTALLFOLDER]PrintHero.UI.exe&quot; -minimized"
+                               KeyPath="yes" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
 
 </Wix>

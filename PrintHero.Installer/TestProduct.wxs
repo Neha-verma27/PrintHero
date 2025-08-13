@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="*"
+             Name="PrintHero Test"
+             Language="1033"
+             Version="1.0.0.0"
+             Manufacturer="PrintHero"
+             UpgradeCode="12345678-1234-1234-1234-123456789013">
+
+        <Package InstallerVersion="200"
+                 Compressed="yes"
+                 InstallScope="perMachine"
+                 Description="PrintHero Test - Diagnostic Version"
+                 Platform="x64" />
+
+        <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+        <MediaTemplate EmbedCab="yes" />
+
+        <Feature Id="MainFeature" Title="Main Feature" Level="1">
+            <ComponentRef Id="MainExecutable" />
+            <ComponentRef Id="CoreRuntime" />
+            <ComponentRef Id="ApplicationShortcut" />
+        </Feature>
+
+        <UIRef Id="WixUI_Minimal" />
+
+        <Icon Id="AppIcon" SourceFile="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.exe" />
+        <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    </Product>
+
+    <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFiles64Folder">
+                <Directory Id="INSTALLFOLDER" Name="PrintHero Test" />
+            </Directory>
+            <Directory Id="ProgramMenuFolder">
+                <Directory Id="ApplicationProgramsFolder" Name="PrintHero Test" />
+            </Directory>
+        </Directory>
+    </Fragment>
+
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="MainExecutable" Guid="*" Win64="yes">
+                <File Id="MainExe" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.exe" KeyPath="yes" />
+                <File Id="MainDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.dll" />
+                <File Id="RuntimeConfig" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.runtimeconfig.json" />
+                <File Id="DepsJson" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PrintHero.UI.deps.json" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+
+    <Fragment>
+        <DirectoryRef Id="INSTALLFOLDER">
+            <Component Id="CoreRuntime" Guid="*" Win64="yes">
+                <File Id="CoreCLRDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\coreclr.dll" KeyPath="yes" />
+                <File Id="ClrJitDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\clrjit.dll" />
+                <File Id="HostPolicyDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\hostpolicy.dll" />
+                <File Id="SystemPrivateCoreLibDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Private.CoreLib.dll" />
+                <File Id="PresentationCoreDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationCore.dll" />
+                <File Id="PresentationFrameworkDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\PresentationFramework.dll" />
+                <File Id="WindowsBaseDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\WindowsBase.dll" />
+                <File Id="SystemWindowsFormsDll" Source="..\\PrintHero.UI\\bin\\Release\\net8.0-windows\\win-x64\\System.Windows.Forms.dll" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+
+    <Fragment>
+        <DirectoryRef Id="ApplicationProgramsFolder">
+            <Component Id="ApplicationShortcut" Guid="*" Win64="yes">
+                <Shortcut Id="ApplicationStartMenuShortcut"
+                          Name="PrintHero Test"
+                          Description="PrintHero Test Application"
+                          Target="[INSTALLFOLDER]PrintHero.UI.exe"
+                          WorkingDirectory="INSTALLFOLDER"
+                          Icon="AppIcon" />
+                <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+                <RegistryValue Root="HKCU" Key="Software\PrintHero Test" Name="installed" Type="integer" Value="1" KeyPath="yes" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+</Wix>

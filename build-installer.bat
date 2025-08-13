@@ -92,7 +92,13 @@ echo =====================================================
 REM Determine which installer file was created
 set "INSTALLER_SOURCE="
 set "INSTALLER_NAME=PrintHeroSetup.msi"
-if exist "PrintHero.Installer\bin\Release\PrintHeroSetup.msi" (
+if exist "PrintHero.Installer\bin\Release\PrintHeroSetup_Fixed_Release_x64.msi" (
+    set "INSTALLER_SOURCE=PrintHero.Installer\bin\Release\PrintHeroSetup_Fixed_Release_x64.msi"
+    echo Installer found: PrintHero.Installer\bin\Release\PrintHeroSetup_Fixed_Release_x64.msi
+) else if exist "PrintHero.Installer\bin\Release\PrintHeroSetup_Release_x64.msi" (
+    set "INSTALLER_SOURCE=PrintHero.Installer\bin\Release\PrintHeroSetup_Release_x64.msi"
+    echo Installer found: PrintHero.Installer\bin\Release\PrintHeroSetup_Release_x64.msi
+) else if exist "PrintHero.Installer\bin\Release\PrintHeroSetup.msi" (
     set "INSTALLER_SOURCE=PrintHero.Installer\bin\Release\PrintHeroSetup.msi"
     echo Installer found: PrintHero.Installer\bin\Release\PrintHeroSetup.msi
 ) else if exist "PrintHero.Installer\bin\PrintHero-Setup.msi" (
@@ -101,6 +107,8 @@ if exist "PrintHero.Installer\bin\Release\PrintHeroSetup.msi" (
     echo Installer found: PrintHero.Installer\bin\PrintHero-Setup.msi
 ) else (
     echo WARNING: Installer file not found in expected location
+    echo Checking for any MSI files...
+    dir PrintHero.Installer\bin\Release\*.msi
     goto :end
 )
 

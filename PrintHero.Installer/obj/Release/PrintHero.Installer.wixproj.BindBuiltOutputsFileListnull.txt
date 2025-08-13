@@ -1,2 +1,2 @@
-C:\Projects\PrintHero\PrintHero\PrintHero.Installer\bin\Release\PrintHeroSetup_Release_x64.msi
-C:\Projects\PrintHero\PrintHero\PrintHero.Installer\bin\Release\PrintHeroSetup_Release_x64.wixpdb
+C:\Projects\PrintHero\PrintHero\PrintHero.Installer\bin\Release\PrintHeroSetup_Fixed_Release_x64.msi
+C:\Projects\PrintHero\PrintHero\PrintHero.Installer\bin\Release\PrintHeroSetup_Fixed_Release_x64.wixpdb

@@ -1,2 +1,2 @@
-C:\Projects\PrintHero\PrintHero\PrintHero.Installer\bin\Debug\PrintHeroSetup.msi
-C:\Projects\PrintHero\PrintHero\PrintHero.Installer\bin\Debug\PrintHeroSetup.wixpdb
+C:\Projects\PrintHero\PrintHero\PrintHero.Installer\bin\Debug\PrintHeroSetup_Fixed_Debug_x86.msi
+C:\Projects\PrintHero\PrintHero\PrintHero.Installer\bin\Debug\PrintHeroSetup_Fixed_Debug_x86.wixpdb

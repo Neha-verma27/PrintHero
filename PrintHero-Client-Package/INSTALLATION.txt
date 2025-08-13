@@ -2,8 +2,8 @@ PrintHero v1.0 - Installation Guide
 ======================================
 
 Package Information:
-- Build Date: Sun 10/08/2025 22:11:28.97
-- Installer Size: 10 MB
+- Build Date: Wed 13/08/2025 17:14:03.07
+- Installer Size: 62 MB
 - File: PrintHeroSetup.msi
 
 System Requirements:

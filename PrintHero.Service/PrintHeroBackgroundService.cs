@@ -13,6 +13,8 @@ public class PrintHeroBackgroundService : BackgroundService
     private readonly JsonConfigService _jsonConfigService;
     private bool _isCurrentlyRunning = false;
     private bool _lastToggleState = false;
+    private FileSystemWatcher? _configWatcher;
+    private DateTime _lastConfigReload = DateTime.MinValue;
 
     public PrintHeroBackgroundService(
         IAppSettingsService appSettingsService,
@@ -145,6 +147,9 @@ public class PrintHeroBackgroundService : BackgroundService
                 }
             }
 
+            // Start monitoring configuration changes
+            StartConfigurationMonitoring();
+
             _isCurrentlyRunning = true;
         }
         catch (Exception ex)
@@ -157,14 +162,20 @@ public class PrintHeroBackgroundService : BackgroundService
     {
         try
         {
+            _isCurrentlyRunning = false;
             _printingService.IsEnabled = false;
             await _fileMonitoringService.StopMonitoringAsync();
             
-            _isCurrentlyRunning = false;
+            // Stop configuration monitoring
+            StopConfigurationMonitoring();
+            
+            // Give a small delay to ensure cleanup completes
+            await Task.Delay(500);
         }
         catch (Exception ex)
         {
-            // Failed to stop PrintHero monitoring service
+            _isCurrentlyRunning = false;
+            // Log error but don't throw - we want stop to complete
         }
     }
 
@@ -199,6 +210,77 @@ public class PrintHeroBackgroundService : BackgroundService
             // Failed to create default folder
         }
     }
+
+    private void StartConfigurationMonitoring()
+    {
+        try
+        {
+            var configFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                "PrintHero");
+
+            _configWatcher = new FileSystemWatcher(configFolder)
+            {
+                Filter = "monitored-folders.json",
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
+                EnableRaisingEvents = true
+            };
+
+            _configWatcher.Changed += OnConfigurationChanged;
+        }
+        catch (Exception ex)
+        {
+            // Failed to setup configuration monitoring
+        }
+    }
+
+    private void StopConfigurationMonitoring()
+    {
+        try
+        {
+            if (_configWatcher != null)
+            {
+                _configWatcher.EnableRaisingEvents = false;
+                _configWatcher.Changed -= OnConfigurationChanged;
+                _configWatcher.Dispose();
+                _configWatcher = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Error stopping configuration monitoring
+        }
+    }
+
+    private async void OnConfigurationChanged(object sender, FileSystemEventArgs e)
+    {
+        try
+        {
+            // Debounce rapid file changes (common with file writes)
+            var now = DateTime.Now;
+            if (now - _lastConfigReload < TimeSpan.FromSeconds(2))
+            {
+                return;
+            }
+            _lastConfigReload = now;
+
+            // Wait a moment for file write to complete
+            await Task.Delay(500);
+
+            if (_isCurrentlyRunning)
+            {
+                // Restart the entire service when folders change
+                var settings = await _appSettingsService.LoadSettingsAsync();
+                await StopPrintHeroMonitoring();
+                await StartPrintHeroMonitoring(settings);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Error handling configuration change
+        }
+    }
+
 
     private async void OnFileProcessed(object? sender, FileProcessedEventArgs e)
     {

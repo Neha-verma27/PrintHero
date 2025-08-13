@@ -14,10 +14,7 @@ if (args.Length > 0)
 }
 
 var host = Host.CreateDefaultBuilder(args)
-    .UseWindowsService(options =>
-    {
-        options.ServiceName = "PrintHeroBackgroundService";
-    })
+    .UseWindowsService()
     .ConfigureServices((context, services) =>
     {
         // Register PrintHero services

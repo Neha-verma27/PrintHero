@@ -10,10 +10,22 @@
 		<AssemblyTitle>PrintHero</AssemblyTitle>
 		<AssemblyDescription>Automatic PDF printing service</AssemblyDescription>
 		<ApplicationIcon>Resources\PrintHero.ico</ApplicationIcon>
+		<SelfContained>true</SelfContained>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<PreserveCompilationContext>true</PreserveCompilationContext>
 		<PublishSingleFile>false</PublishSingleFile>
-		<SelfContained>false</SelfContained>
+		<PublishTrimmed>false</PublishTrimmed>
+	</PropertyGroup>
+
+	<!-- Ensure Release configuration works -->
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<DefineConstants>TRACE</DefineConstants>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+		<PublishReadyToRun>false</PublishReadyToRun>
+		<EnableCompressionInSingleFile>false</EnableCompressionInSingleFile>
 	</PropertyGroup>
 
 
@@ -32,9 +44,8 @@
 		<PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
 		<PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
 		<PackageReference Include="System.Drawing.Common" Version="6.0.0" />
-		<PackageReference Include="System.Management" Version="6.0.0" />
-		<PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.6" />
 		<PackageReference Include="System.Text.Json" Version="9.0.6" />
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -47,23 +58,24 @@
 		<ItemGroup>
 			<PdfiumFiles Include="$(NuGetPackageRoot)pdfiumviewer.native.x86_64.v8-xfa\**\pdfium.dll" />
 		</ItemGroup>
-		<Copy SourceFiles="@(PdfiumFiles)" DestinationFolder="$(OutputPath)x64" SkipUnchangedFiles="true" Condition="Exists('%(PdfiumFiles.FullPath)')" />
+		<Copy SourceFiles="@(PdfiumFiles)" DestinationFolder="$(OutputPath)x64" SkipUnchangedFiles="true" Condition="Exists('%(PdfiumFiles.FullPath)')" ContinueOnError="true" />
 	</Target>
 
 	<!-- Copy service executable and all its dependencies to UI output directory -->
-	<Target Name="CopyServiceExecutable" AfterTargets="Build">
+	<Target Name="CopyServiceExecutable" AfterTargets="Build" DependsOnTargets="BuildServiceProject">
 		<ItemGroup>
 			<!-- Main service files -->
-			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\PrintHero.Service.exe" />
-			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\PrintHero.Service.dll" />
-			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\PrintHero.Service.deps.json" />
-			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\PrintHero.Service.runtimeconfig.json" />
-			
-			<!-- Service dependencies that might not be in UI output -->
-			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\Microsoft.Extensions.Hosting.WindowsServices.dll" />
-			<ServiceFiles Include="$(SolutionDir)PrintHero.Service\bin\$(Configuration)\net8.0-windows\System.ServiceProcess.ServiceController.dll" />
+			<ServiceFiles Include="..\PrintHero.Service\bin\$(Configuration)\net8.0-windows\win-x64\PrintHero.Service.exe" />
+			<ServiceFiles Include="..\PrintHero.Service\bin\$(Configuration)\net8.0-windows\win-x64\PrintHero.Service.dll" />
+			<ServiceFiles Include="..\PrintHero.Service\bin\$(Configuration)\net8.0-windows\win-x64\PrintHero.Service.deps.json" />
+			<ServiceFiles Include="..\PrintHero.Service\bin\$(Configuration)\net8.0-windows\win-x64\PrintHero.Service.runtimeconfig.json" />
 		</ItemGroup>
-		<Copy SourceFiles="@(ServiceFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" Condition="Exists('%(ServiceFiles.FullPath)')" />
+		<Copy SourceFiles="@(ServiceFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" Condition="Exists('%(ServiceFiles.FullPath)')" ContinueOnError="true" />
+	</Target>
+
+	<!-- Ensure Service project builds first -->
+	<Target Name="BuildServiceProject" BeforeTargets="CopyServiceExecutable">
+		<MSBuild Projects="..\PrintHero.Service\PrintHero.Service.csproj" Targets="Build" Properties="Configuration=$(Configuration)" ContinueOnError="false" />
 	</Target>
 
 	<ItemGroup>

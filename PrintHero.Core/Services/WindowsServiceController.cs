@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.ServiceProcess;
+using System.Management;
 
 namespace PrintHero.Core.Services;
 
@@ -132,13 +133,13 @@ public class WindowsServiceController
             if (!File.Exists(serviceExePath))
             {
                 // Service executable not found - this will prevent proper service installation
-                return false;
+                throw new FileNotFoundException($"Service executable not found at: {serviceExePath}");
             }
             
             // Verify the service executable is valid
             if (!IsValidServiceExecutable(serviceExePath))
             {
-                return false;
+                throw new InvalidOperationException($"Service executable is invalid or corrupted: {serviceExePath}");
             }
 
             // Try installation without elevation first (might work if already admin)
@@ -148,11 +149,39 @@ public class WindowsServiceController
             }
 
             // If that fails, try with elevation
-            return await TryInstallService(serviceExePath, true);
+            var elevatedResult = await TryInstallService(serviceExePath, true);
+            if (!elevatedResult)
+            {
+                // Both attempts failed - likely admin privileges are needed
+                throw new UnauthorizedAccessException("Failed to install Windows service. Administrator privileges are required.");
+            }
+            
+            return true;
+        }
+        catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
+        {
+            // User cancelled UAC prompt
+            throw new OperationCanceledException("Service installation was cancelled by user.");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Re-throw admin privilege errors
+            throw;
+        }
+        catch (FileNotFoundException)
+        {
+            // Re-throw file not found errors
+            throw;
+        }
+        catch (InvalidOperationException)
+        {
+            // Re-throw invalid operation errors
+            throw;
         }
         catch (Exception ex)
         {
-            return false;
+            // Wrap other exceptions with more context
+            throw new InvalidOperationException($"Failed to install Windows service: {ex.Message}", ex);
         }
     }
 
@@ -212,22 +241,12 @@ public class WindowsServiceController
             // First check if service is installed
             if (!await IsServiceInstalledAsync())
             {
-                // For installed apps, service should already be installed by MSI
-                // Only try to install if this appears to be a development scenario
-                if (IsRunningFromDevelopment())
-                {
-                    if (!await InstallServiceAsync())
-                    {
-                        return false;
-                    }
-                    
-                    // Wait a moment after installation
-                    await Task.Delay(2000);
-                }
-                else
-                {
-                    return false;
-                }
+                // Always try to install the service if it's not found, regardless of development vs installed
+                // This handles cases where MSI didn't install the service or it was manually removed
+                await InstallServiceAsync(); // This will throw appropriate exceptions if installation fails
+                
+                // Wait a moment after installation
+                await Task.Delay(2000);
             }
 
             // Try to start the service
@@ -267,8 +286,17 @@ public class WindowsServiceController
                         // Timeout - service didn't start in time
                         return false;
                     }
-                    catch (System.ComponentModel.Win32Exception)
+                    catch (System.ComponentModel.Win32Exception ex)
                     {
+                        // Log the actual Win32 error
+                        System.Diagnostics.Debug.WriteLine($"Win32Exception starting service: {ex.Message}, ErrorCode: {ex.ErrorCode}, NativeErrorCode: {ex.NativeErrorCode}");
+                        
+                        // Check for access denied errors (admin privileges needed)
+                        if (ex.NativeErrorCode == 5 || ex.ErrorCode == 5) // ERROR_ACCESS_DENIED
+                        {
+                            throw new UnauthorizedAccessException("Administrator privileges are required to start the Windows service.", ex);
+                        }
+                        
                         // Service failed to start - try reinstalling
                         var reinstalled = await ReinstallServiceAsync();
                         if (reinstalled)
@@ -284,15 +312,18 @@ public class WindowsServiceController
                                     return true;
                                 }
                             }
-                            catch
+                            catch (Exception retryEx)
                             {
-                                // Still failed after reinstall
+                                System.Diagnostics.Debug.WriteLine($"Service start retry failed: {retryEx.Message}");
                             }
                         }
                         return false;
                     }
-                    catch (InvalidOperationException)
+                    catch (InvalidOperationException ex)
                     {
+                        // Log the invalid operation error
+                        System.Diagnostics.Debug.WriteLine($"InvalidOperationException starting service: {ex.Message}");
+                        
                         // Service in invalid state - try reinstalling
                         var reinstalled = await ReinstallServiceAsync();
                         if (reinstalled)
@@ -308,9 +339,9 @@ public class WindowsServiceController
                                     return true;
                                 }
                             }
-                            catch
+                            catch (Exception retryEx)
                             {
-                                // Still failed after reinstall
+                                System.Diagnostics.Debug.WriteLine($"Service start retry after reinstall failed: {retryEx.Message}");
                             }
                         }
                         return false;
@@ -321,11 +352,13 @@ public class WindowsServiceController
             }
             catch (InvalidOperationException ex) when (ex.Message.Contains("Cannot open"))
             {
+                System.Diagnostics.Debug.WriteLine($"Cannot open service: {ex.Message}");
                 return false;
             }
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"General exception in StartServiceAsync: {ex.Message}");
             return false;
         }
     }

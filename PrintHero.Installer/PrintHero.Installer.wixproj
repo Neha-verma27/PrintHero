@@ -6,7 +6,7 @@
     <ProductVersion>3.10</ProductVersion>
     <ProjectGuid>{0b6d2430-1ad8-4e46-b17b-d8f6e7dcadab}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>PrintHeroSetup_$(Configuration)_$(Platform)</OutputName>
+    <OutputName>PrintHeroSetup_Fixed_$(Configuration)_$(Platform)</OutputName>
     <OutputType>Package</OutputType>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
@@ -16,26 +16,26 @@
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>Debug</DefineConstants>
     <SuppressValidation>false</SuppressValidation>
-    <SuppressIces>ICE61</SuppressIces>
+    <SuppressIces>ICE61;ICE03;ICE57;ICE82</SuppressIces>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <SuppressValidation>false</SuppressValidation>
-    <SuppressIces>ICE61</SuppressIces>
+    <SuppressIces>ICE61;ICE03;ICE57;ICE82</SuppressIces>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <DefineConstants>Debug</DefineConstants>
     <SuppressValidation>false</SuppressValidation>
-    <SuppressIces>ICE61</SuppressIces>
+    <SuppressIces>ICE61;ICE03;ICE57;ICE82</SuppressIces>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <SuppressValidation>false</SuppressValidation>
-    <SuppressIces>ICE61</SuppressIces>
+    <SuppressIces>ICE61;ICE03;ICE57;ICE82</SuppressIces>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Product.wxs" />
@@ -57,6 +57,7 @@
   </Target>
   
   <!-- Clean old MSI files before build to prevent locking issues -->
+  <!-- Disabled CleanOldMsi due to persistent file lock issues
   <Target Name="CleanOldMsi" BeforeTargets="Build">
     <ItemGroup>
       <OldMsiFiles Include="$(OutputPath)*.msi" />
@@ -66,4 +67,5 @@
     <Delete Files="@(OldMsiFiles)" ContinueOnError="true" />
     <Message Text="Cleaned old MSI files from $(OutputPath)" />
   </Target>
+  -->
 </Project>

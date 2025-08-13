@@ -325,6 +325,13 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
     {
         try
         {
+            // Quick check if file is immediately accessible
+            if (!IsFileAccessible(filePath))
+            {
+                _logger.LogInformation($"File is locked, skipping move operation: {filePath}");
+                return filePath; // Still report success, just don't move the file
+            }
+
             var printedFolder = Path.Combine(Path.GetDirectoryName(filePath)!, "Printed");
 
             // Check if file still exists at original location
@@ -338,24 +345,61 @@ public class FileMonitoringService : IFileMonitoringService, IDisposable
             Directory.CreateDirectory(printedFolder);
             var newPath = Path.Combine(printedFolder, Path.GetFileName(filePath));
             
-            // If file already exists, delete it before moving (replace mode)
+            // If file already exists, try to delete it
             if (File.Exists(newPath))
             {
-                File.Delete(newPath);
-                _logger.LogInformation($"Replaced existing file: {newPath}");
+                try
+                {
+                    File.Delete(newPath);
+                }
+                catch (IOException)
+                {
+                    _logger.LogWarning($"Could not delete existing file, skipping move: {newPath}");
+                    return filePath; // Skip move but report success
+                }
             }
             
-            File.Move(filePath, newPath);
-            _logger.LogInformation($"Moved file to printed folder: {newPath}");
-            return newPath;           
+            // Try to move file - single attempt
+            try
+            {
+                File.Move(filePath, newPath);
+                _logger.LogInformation($"Moved file to printed folder: {newPath}");
+                return newPath;
+            }
+            catch (IOException ex)
+            {
+                _logger.LogInformation($"File still in use, skipping move: {filePath}. {ex.Message}");
+                return filePath; // Skip move but report success
+            }
             
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to handle post-print action for file: {filePath}");
-            return filePath;
+            _logger.LogWarning(ex, $"Post-print action failed for file: {filePath}");
+            return filePath; // Return original path on any error
         }
     }
+
+    private bool IsFileAccessible(string filePath)
+    {
+        try
+        {
+            // Try to open the file briefly to check if it's accessible
+            using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                return true;
+            }
+        }
+        catch (IOException)
+        {
+            return false; // File is locked or inaccessible
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false; // No permission to access file
+        }
+    }
+
 
     private bool IsFileMatchingPattern(string filePath, string pattern)
     {

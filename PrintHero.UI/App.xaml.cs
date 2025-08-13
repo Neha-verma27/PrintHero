@@ -7,14 +7,16 @@ using PrintHero.Core.Services;
 using PrintHero.UI.ViewModels;
 using Serilog;
 using System.IO;
-using MessageBox = System.Windows.MessageBox;
 using Microsoft.Win32;
 using System.Reflection;
-using PrintHero.Core.Services;
+
+// Resolve ambiguous references
+using MessageBox = System.Windows.MessageBox;
+using Application = System.Windows.Application;
 
 namespace PrintHero.UI;
 
-public partial class App : System.Windows.Application
+public partial class App : Application
 {
     private IHost? _host;
     private ILogger<App>? _logger;

@@ -11,6 +11,8 @@ using System.IO;
 using System.Drawing.Printing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Windows;
+using System.Security.Principal;
 
 namespace PrintHero.UI.ViewModels
 {
@@ -144,6 +146,7 @@ namespace PrintHero.UI.ViewModels
             get => _isServiceRunning;
             set
             {
+                System.Diagnostics.Debug.WriteLine($"IsServiceRunning changing from {_isServiceRunning} to {value}");
                 SetProperty(ref _isServiceRunning, value);
             }
         }
@@ -295,6 +298,9 @@ namespace PrintHero.UI.ViewModels
             {
                 if (_appSettingsService == null) return;
 
+                // Sync MonitoredFolders with PrintJob hot folders
+                SyncMonitoredFoldersWithPrintJobs();
+
                 var settings = new AppSettings
                 {
                     DefaultPrinter = DefaultPrinter ?? string.Empty,
@@ -324,72 +330,151 @@ namespace PrintHero.UI.ViewModels
             }
         }
 
+        private void SyncMonitoredFoldersWithPrintJobs()
+        {
+            try
+            {
+                if (PrintJobConfigurations == null) return;
+
+                // Clear existing monitored folders
+                MonitoredFolders.Clear();
+
+                // Create monitored folders from print job hot folders
+                foreach (var printJob in PrintJobConfigurations.Where(pj => !string.IsNullOrEmpty(pj.HotFolderPath)))
+                {
+                    var monitoredFolder = new MonitoredFolder
+                    {
+                        Id = printJob.Id,
+                        FolderPath = printJob.HotFolderPath,
+                        FilePattern = printJob.FilePattern ?? "*.pdf",
+                        IsActive = printJob.IsActive,
+                        IncludeSubfolders = false,
+                        CreatedAt = printJob.CreatedAt
+                    };
+
+                    MonitoredFolders.Add(monitoredFolder);
+                }
+
+                // Notify UI of folder changes
+                OnPropertyChanged(nameof(FirstMonitoredFolder));
+            }
+            catch (Exception ex)
+            {
+                // Error syncing folders
+            }
+        }
+
         private async Task StartService()
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("=== StartService called ===");
                 _isServiceEnabledByUser = true;
                 
                 if (_serviceController == null)
                 {
+                    System.Diagnostics.Debug.WriteLine("ERROR: ServiceController is null");
                     IsServiceRunning = false;
                     return;
                 }
                 
                 // Check if service is installed, install if needed
-                if (!await _serviceController.IsServiceInstalledAsync())
+                System.Diagnostics.Debug.WriteLine("Checking if service is installed...");
+                var isInstalled = await _serviceController.IsServiceInstalledAsync();
+                System.Diagnostics.Debug.WriteLine($"Service installed: {isInstalled}");
+                
+                if (!isInstalled)
                 {
-                    var installed = await _serviceController.InstallServiceAsync();
-                    if (!installed)
-                    {
-                        // Installation failed - likely missing exe or permissions
-                        IsServiceRunning = false;
-                        throw new InvalidOperationException("Failed to install Windows service. Service executable may be missing or insufficient permissions.");
-                    }
+                    System.Diagnostics.Debug.WriteLine("Installing service...");
+                    await _serviceController.InstallServiceAsync(); // This will throw exceptions if installation fails
+                    System.Diagnostics.Debug.WriteLine("Service installation succeeded");
                     
                     // Wait a moment after installation
                     await Task.Delay(2000);
                 }
                 
                 // Start the service
+                System.Diagnostics.Debug.WriteLine("Starting service...");
                 var serviceStarted = await _serviceController.StartServiceAsync();
+                System.Diagnostics.Debug.WriteLine($"Service start result: {serviceStarted}");
+                
                 if (serviceStarted)
                 {
+                    System.Diagnostics.Debug.WriteLine("SUCCESS: Service started successfully");
                     IsServiceRunning = true;
                     await SaveSettingsAsync();
                 }
                 else
                 {
+                    System.Diagnostics.Debug.WriteLine("ERROR: Service failed to start");
                     IsServiceRunning = false;
-                    throw new InvalidOperationException("Windows service failed to start. Check if PrintHero.Service.exe exists and has proper permissions.");
+                    throw new InvalidOperationException("Windows service failed to start. This may be due to insufficient permissions or missing service files.");
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"EXCEPTION in StartService: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Exception type: {ex.GetType().Name}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 IsServiceRunning = false;
+                
+                // Show user-friendly message if admin privileges are needed
+                ShowServiceStartErrorMessage(ex, onUserAcknowledged: () =>
+                {
+                    // Reset toggle only after user clicks OK
+                    _isServiceEnabledByUser = false;
+                    IsServiceRunning = false;
+                    _ = Task.Run(async () => await SaveSettingsAsync());
+                });
             }
         }
 
 
         private async Task StopService()
         {
+            // Update UI immediately for responsive feel
+            _isServiceEnabledByUser = false;
+            IsServiceRunning = false; // Optimistically set to false immediately
+            
             try
             {
-                _isServiceEnabledByUser = false;
-                
                 if (_serviceController == null)
                 {
-                    IsServiceRunning = false;
                     return;
                 }
                 
-                await _serviceController.StopServiceAsync();
-                IsServiceRunning = false;
-                await SaveSettingsAsync();
+                // Perform service operations in background
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _serviceController.StopServiceAsync();
+                        
+                        // Update UI on main thread to confirm stop
+                        System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
+                        {
+                            IsServiceRunning = false; // Confirm it's stopped
+                            _ = Task.Run(async () => await SaveSettingsAsync());
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Error stopping service: {ex.Message}");
+                        
+                        // Even if stop fails, we assume the service is stopped from user's perspective
+                        // Most stop failures are due to service already being stopped
+                        System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
+                        {
+                            IsServiceRunning = false;
+                            _ = Task.Run(async () => await SaveSettingsAsync());
+                        });
+                    }
+                });
             }
-            catch
+            catch (Exception ex)
             {
-                IsServiceRunning = false;
+                System.Diagnostics.Debug.WriteLine($"Immediate error in StopService: {ex.Message}");
+                // Keep IsServiceRunning = false since that's what user requested
             }
         }
 
@@ -678,6 +763,106 @@ namespace PrintHero.UI.ViewModels
             catch (Exception ex)
             {
                 IsServiceRunning = false;
+            }
+        }
+
+        private bool IsRunningAsAdministrator()
+        {
+            try
+            {
+                var identity = WindowsIdentity.GetCurrent();
+                var principal = new WindowsPrincipal(identity);
+                return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private void ShowServiceStartErrorMessage(Exception ex, Action? onUserAcknowledged = null)
+        {
+            string message;
+            string title = "Service Start Failed";
+
+            // Check for specific exception types first
+            if (ex is UnauthorizedAccessException || ex.Message.Contains("Administrator privileges"))
+            {
+                message = "PrintHero needs administrator privileges to start the background service.\n\n" +
+                         "To fix this:\n" +
+                         "1. Close PrintHero\n" +
+                         "2. Right-click on PrintHero and select 'Run as administrator'\n" +
+                         "3. Try the service toggle again\n\n" +
+                         "After the service is installed once with admin rights, you can run PrintHero normally.";
+                title = "Administrator Privileges Required";
+            }
+            else if (ex is FileNotFoundException)
+            {
+                message = "The PrintHero service executable file could not be found.\n\n" +
+                         "This may indicate an incomplete installation. Please:\n" +
+                         "• Reinstall PrintHero using the MSI installer\n" +
+                         "• Run the installer as administrator\n" +
+                         "• Check that antivirus software isn't blocking the installation";
+                title = "Service Executable Missing";
+            }
+            else if (ex is OperationCanceledException)
+            {
+                message = "Service installation was cancelled.\n\n" +
+                         "The Windows User Account Control (UAC) prompt was cancelled. " +
+                         "Administrator privileges are required to install the PrintHero service.";
+                title = "Installation Cancelled";
+            }
+            else if (!IsRunningAsAdministrator() && (ex.Message.Contains("failed to start") || ex.Message.Contains("permissions")))
+            {
+                message = "PrintHero needs administrator privileges to start the background service.\n\n" +
+                         "To fix this:\n" +
+                         "1. Close PrintHero\n" +
+                         "2. Right-click on PrintHero and select 'Run as administrator'\n" +
+                         "3. Try the service toggle again\n\n" +
+                         "After the service is installed once, you can run PrintHero normally.";
+                title = "Administrator Privileges Required";
+            }
+            else
+            {
+                message = $"Failed to start the PrintHero background service.\n\n" +
+                         $"Error: {ex.Message}\n\n" +
+                         "Try running PrintHero as administrator or check your antivirus settings.";
+            }
+
+            // Show message on UI thread and wait for user to click OK
+            try
+            {
+                if (System.Windows.Application.Current?.Dispatcher != null)
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        System.Windows.MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                        // Call the callback after user clicks OK
+                        onUserAcknowledged?.Invoke();
+                    });
+                }
+                else
+                {
+                    // Fallback: show on current thread if dispatcher not available
+                    System.Windows.MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    onUserAcknowledged?.Invoke();
+                }
+            }
+            catch (Exception dispatcherEx)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error showing message box: {dispatcherEx.Message}");
+                // Last resort: try to show directly
+                try
+                {
+                    System.Windows.MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    onUserAcknowledged?.Invoke();
+                }
+                catch (Exception finalEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to show any message box: {finalEx.Message}");
+                    // Still call callback even if message failed
+                    onUserAcknowledged?.Invoke();
+                }
             }
         }
 

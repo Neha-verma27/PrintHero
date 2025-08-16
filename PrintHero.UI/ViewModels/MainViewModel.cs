@@ -35,6 +35,7 @@ namespace PrintHero.UI.ViewModels
         private string _orientation = "Portrait";
         private bool _autoStartService = true; // Always default to auto-start
         private bool _isServiceEnabledByUser = true; // Remember user's toggle preference
+        private bool _isServiceStarting = false; // Prevent duplicate start attempts
 
         private int _printingErrorsToday;
 
@@ -368,64 +369,136 @@ namespace PrintHero.UI.ViewModels
         {
             try
             {
+                // Prevent duplicate start attempts
+                if (_isServiceStarting)
+                {
+                    System.Diagnostics.Debug.WriteLine("Service start already in progress, skipping duplicate attempt");
+                    return;
+                }
+                
                 System.Diagnostics.Debug.WriteLine("=== StartService called ===");
+                _isServiceStarting = true;
                 _isServiceEnabledByUser = true;
+                IsServiceRunning = true; // Show starting state immediately
                 
                 if (_serviceController == null)
                 {
                     System.Diagnostics.Debug.WriteLine("ERROR: ServiceController is null");
                     IsServiceRunning = false;
+                    _isServiceEnabledByUser = false;
+                    _isServiceStarting = false;
                     return;
                 }
                 
-                // Check if service is installed, install if needed
-                System.Diagnostics.Debug.WriteLine("Checking if service is installed...");
-                var isInstalled = await _serviceController.IsServiceInstalledAsync();
-                System.Diagnostics.Debug.WriteLine($"Service installed: {isInstalled}");
-                
-                if (!isInstalled)
+                // Perform all service operations in background
+                _ = Task.Run(async () =>
                 {
-                    System.Diagnostics.Debug.WriteLine("Installing service...");
-                    await _serviceController.InstallServiceAsync(); // This will throw exceptions if installation fails
-                    System.Diagnostics.Debug.WriteLine("Service installation succeeded");
-                    
-                    // Wait a moment after installation
-                    await Task.Delay(2000);
-                }
-                
-                // Start the service
-                System.Diagnostics.Debug.WriteLine("Starting service...");
-                var serviceStarted = await _serviceController.StartServiceAsync();
-                System.Diagnostics.Debug.WriteLine($"Service start result: {serviceStarted}");
-                
-                if (serviceStarted)
-                {
-                    System.Diagnostics.Debug.WriteLine("SUCCESS: Service started successfully");
-                    IsServiceRunning = true;
-                    await SaveSettingsAsync();
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("ERROR: Service failed to start");
-                    IsServiceRunning = false;
-                    throw new InvalidOperationException("Windows service failed to start. This may be due to insufficient permissions or missing service files.");
-                }
+                    try
+                    {
+                        // Check if service is installed, install if needed
+                        System.Diagnostics.Debug.WriteLine("Checking if service is installed...");
+                        var isInstalled = await _serviceController.IsServiceInstalledAsync();
+                        System.Diagnostics.Debug.WriteLine($"Service installed: {isInstalled}");
+                        
+                        if (!isInstalled)
+                        {
+                            System.Diagnostics.Debug.WriteLine("Installing service...");
+                            await _serviceController.InstallServiceAsync();
+                            System.Diagnostics.Debug.WriteLine("Service installation succeeded");
+                            
+                            // Reduced wait time after installation
+                            await Task.Delay(1000);
+                        }
+                        
+                        // Start the service
+                        System.Diagnostics.Debug.WriteLine("Starting service...");
+                        var serviceStarted = await _serviceController.StartServiceAsync();
+                        System.Diagnostics.Debug.WriteLine($"Service start result: {serviceStarted}");
+                        
+                        // Update UI based on actual result
+                        System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
+                        {
+                            _isServiceStarting = false; // Reset the starting flag
+                            
+                            if (serviceStarted)
+                            {
+                                System.Diagnostics.Debug.WriteLine("SUCCESS: Service started successfully");
+                                IsServiceRunning = true;
+                            }
+                            else
+                            {
+                                System.Diagnostics.Debug.WriteLine("ERROR: Service failed to start");
+                                IsServiceRunning = false;
+                                ShowServiceStartErrorMessage(
+                                    new InvalidOperationException("Windows service failed to start. This may be due to insufficient permissions or missing service files."), 
+                                    onUserAcknowledged: () =>
+                                    {
+                                        _isServiceEnabledByUser = false;
+                                        IsServiceRunning = false;
+                                        _ = Task.Run(async () => await SaveSettingsAsync());
+                                    });
+                            }
+                        });
+                        
+                        // Save settings in background
+                        await SaveSettingsAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"EXCEPTION in StartService background task: {ex.Message}");
+                        
+                        // Update UI on main thread with error state
+                        try
+                        {
+                            if (System.Windows.Application.Current?.Dispatcher != null)
+                            {
+                                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                                {
+                                    // Reset starting flag and turn off toggle
+                                    _isServiceStarting = false;
+                                    _isServiceEnabledByUser = false;
+                                    IsServiceRunning = false;
+                                    OnPropertyChanged(nameof(IsServiceRunning));
+                                    
+                                    ShowServiceStartErrorMessage(ex, onUserAcknowledged: () =>
+                                    {
+                                        // Ensure toggle stays off after user acknowledges error
+                                        _isServiceEnabledByUser = false;
+                                        IsServiceRunning = false;
+                                        OnPropertyChanged(nameof(IsServiceRunning));
+                                        _ = Task.Run(async () => await SaveSettingsAsync());
+                                    });
+                                });
+                            }
+                        }
+                        catch (Exception dispEx)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Error updating UI: {dispEx.Message}");
+                            // Fallback: set properties directly
+                            _isServiceStarting = false;
+                            _isServiceEnabledByUser = false;
+                            IsServiceRunning = false;
+                        }
+                    }
+                });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"EXCEPTION in StartService: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Exception type: {ex.GetType().Name}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                System.Diagnostics.Debug.WriteLine($"Immediate EXCEPTION in StartService: {ex.Message}");
+                _isServiceStarting = false; // Reset the starting flag
+                _isServiceEnabledByUser = false;
                 IsServiceRunning = false;
                 
-                // Show user-friendly message if admin privileges are needed
-                ShowServiceStartErrorMessage(ex, onUserAcknowledged: () =>
+                // Only show error if it's not an admin privilege issue that will be handled by background task
+                if (!ex.Message.Contains("Administrator privileges") && !ex.Message.Contains("UnauthorizedAccessException"))
                 {
-                    // Reset toggle only after user clicks OK
-                    _isServiceEnabledByUser = false;
-                    IsServiceRunning = false;
-                    _ = Task.Run(async () => await SaveSettingsAsync());
-                });
+                    ShowServiceStartErrorMessage(ex, onUserAcknowledged: () =>
+                    {
+                        _isServiceEnabledByUser = false;
+                        IsServiceRunning = false;
+                        _ = Task.Run(async () => await SaveSettingsAsync());
+                    });
+                }
             }
         }
 
@@ -436,6 +509,9 @@ namespace PrintHero.UI.ViewModels
             _isServiceEnabledByUser = false;
             IsServiceRunning = false; // Optimistically set to false immediately
             
+            // Save settings immediately in background without blocking
+            _ = Task.Run(async () => await SaveSettingsAsync());
+            
             try
             {
                 if (_serviceController == null)
@@ -443,31 +519,18 @@ namespace PrintHero.UI.ViewModels
                     return;
                 }
                 
-                // Perform service operations in background
+                // Perform service operations in background without waiting
                 _ = Task.Run(async () =>
                 {
                     try
                     {
                         await _serviceController.StopServiceAsync();
-                        
-                        // Update UI on main thread to confirm stop
-                        System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
-                        {
-                            IsServiceRunning = false; // Confirm it's stopped
-                            _ = Task.Run(async () => await SaveSettingsAsync());
-                        });
+                        System.Diagnostics.Debug.WriteLine("Service stopped successfully");
                     }
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine($"Error stopping service: {ex.Message}");
-                        
-                        // Even if stop fails, we assume the service is stopped from user's perspective
-                        // Most stop failures are due to service already being stopped
-                        System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
-                        {
-                            IsServiceRunning = false;
-                            _ = Task.Run(async () => await SaveSettingsAsync());
-                        });
+                        // Don't update UI since we already set it to stopped optimistically
                     }
                 });
             }

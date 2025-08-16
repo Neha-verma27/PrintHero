@@ -23,6 +23,12 @@ public partial class MainWindow : Window
             _logger = null;
             DataContext = _viewModel;
             
+            // Subscribe to PropertyChanged to sync toggle state
+            if (_viewModel != null)
+            {
+                _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+            }
+            
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
         }
@@ -49,6 +55,12 @@ public partial class MainWindow : Window
             _logger = logger;
             DataContext = _viewModel;
 
+            // Subscribe to PropertyChanged to sync toggle state
+            if (_viewModel != null)
+            {
+                _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+            }
+
             this.Loaded += MainWindow_Loaded;
             this.Closing += MainWindow_Closing;
         }
@@ -63,6 +75,18 @@ public partial class MainWindow : Window
             }
             catch { }
             throw; // Re-throw to prevent app from continuing in bad state
+        }
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.IsServiceRunning))
+        {
+            // Sync toggle with ViewModel state on UI thread
+            Dispatcher.BeginInvoke(() =>
+            {
+                PowerToggle.IsChecked = _viewModel?.IsServiceRunning ?? false;
+            });
         }
     }
 
@@ -126,28 +150,50 @@ public partial class MainWindow : Window
     {
         if (_viewModel == null) return;
         
+        // Disable toggle during operation
+        PowerToggle.IsEnabled = false;
+        
         try
         {
-            PowerToggle.IsEnabled = false;
+            // Start service operations in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await CallStartServiceAsync();
+                    
+                    // Update UI on main thread based on actual service state
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        // Sync toggle with ViewModel state
+                        PowerToggle.IsChecked = _viewModel.IsServiceRunning;
+                        PowerToggle.IsEnabled = true;
+                    });
+                    
+                    // Save settings asynchronously without blocking
+                    _ = Task.Run(async () => await _viewModel.SaveSettingsAsync());
+                }
+                catch (Exception ex)
+                {
+                    // Update UI on main thread with error state - toggle should be OFF
+                    // Don't show error message here - let ViewModel handle it to avoid duplicates
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        PowerToggle.IsChecked = false; // Force toggle OFF on error
+                        PowerToggle.IsEnabled = true;
+                    });
+                }
+            });
             
-            // Call the StartService method directly
-            await CallStartServiceAsync();
-            
-            // Update toggle based on actual service state
-            PowerToggle.IsChecked = _viewModel.IsServiceRunning;
-            
-            // Force save settings immediately
-            await _viewModel.SaveSettingsAsync();
+            // Re-enable toggle quickly for responsive feel
+            await Task.Delay(200);
+            PowerToggle.IsEnabled = true;
         }
         catch (Exception ex)
         {
             PowerToggle.IsChecked = false;
-            System.Windows.MessageBox.Show($"Error starting service: {ex.Message}", 
-                "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-        }
-        finally
-        {
             PowerToggle.IsEnabled = true;
+            // Don't show error message here - let ViewModel handle it to avoid duplicates
         }
     }
     
@@ -156,8 +202,8 @@ public partial class MainWindow : Window
         if (_viewModel?.StartServiceCommand.CanExecute(null) == true)
         {
             _viewModel.StartServiceCommand.Execute(null);
-            // Give the async command time to complete
-            await Task.Delay(2000);
+            // Reduced delay for faster perceived response
+            await Task.Delay(500);
         }
     }
 
@@ -165,27 +211,47 @@ public partial class MainWindow : Window
     {
         if (_viewModel == null) return;
         
+        // Immediately provide visual feedback - don't wait for service operations
+        PowerToggle.IsEnabled = false;
+        
         try
         {
-            PowerToggle.IsEnabled = false;
+            // Stop service operations in background without blocking UI
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await CallStopServiceAsync();
+                    
+                    // Update UI on main thread
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        PowerToggle.IsChecked = _viewModel.IsServiceRunning;
+                        PowerToggle.IsEnabled = true;
+                    });
+                    
+                    // Save settings asynchronously without blocking
+                    _ = Task.Run(async () => await _viewModel.SaveSettingsAsync());
+                }
+                catch (Exception ex)
+                {
+                    // Update UI on main thread with error state
+                    // Don't show error message here - let ViewModel handle it to avoid duplicates
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        PowerToggle.IsEnabled = true;
+                    });
+                }
+            });
             
-            // Call the StopService method directly
-            await CallStopServiceAsync();
-            
-            // Update toggle based on actual service state
-            PowerToggle.IsChecked = _viewModel.IsServiceRunning;
-            
-            // Force save settings immediately
-            await _viewModel.SaveSettingsAsync();
+            // Re-enable toggle immediately for better UX (operations continue in background)
+            await Task.Delay(100); // Brief delay to show the toggle is processing
+            PowerToggle.IsEnabled = true;
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"Error stopping service: {ex.Message}", 
-                "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
-        }
-        finally
-        {
             PowerToggle.IsEnabled = true;
+            // Don't show error message here - let ViewModel handle it to avoid duplicates
         }
     }
     
@@ -194,8 +260,8 @@ public partial class MainWindow : Window
         if (_viewModel?.StopServiceCommand.CanExecute(null) == true)
         {
             _viewModel.StopServiceCommand.Execute(null);
-            // Give the async command time to complete
-            await Task.Delay(2000);
+            // Reduced delay for faster perceived response
+            await Task.Delay(500);
         }
     }
 

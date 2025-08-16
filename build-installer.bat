@@ -6,12 +6,22 @@ REM Build applications
 echo Step 1: Building applications...
 dotnet build PrintHero.UI\PrintHero.UI.csproj --configuration Release --nologo
 if %ERRORLEVEL% neq 0 (
-    echo ERROR: Build failed
+    echo ERROR: Main application build failed
     echo Press any key to continue...
     pause >nul
     exit /b 1
 )
-echo ✓ Applications built successfully
+echo ✓ Main application built successfully
+
+echo Building uninstaller...
+dotnet build PrintHero.Uninstaller\PrintHero.Uninstaller.csproj --configuration Release --nologo
+if %ERRORLEVEL% neq 0 (
+    echo ERROR: Uninstaller build failed
+    echo Press any key to continue...
+    pause >nul
+    exit /b 1
+)
+echo ✓ Uninstaller built successfully
 
 REM Check if WiX is installed
 echo Step 2: Checking for WiX toolset...
@@ -187,11 +197,61 @@ echo.
 echo ✓ INSTALLATION.txt updated
 
 echo.
+echo Step 6: Creating Uninstaller Package...
+if not exist "PrintHero-Client-Package\Uninstaller" (
+    echo Creating Uninstaller directory...
+    mkdir "PrintHero-Client-Package\Uninstaller"
+)
+
+REM Copy uninstaller executable and dependencies
+echo Copying uninstaller files...
+copy "PrintHero.Uninstaller\bin\Release\net8.0-windows\PrintHero.Uninstaller.exe" "PrintHero-Client-Package\Uninstaller\" >nul
+if %ERRORLEVEL% neq 0 (
+    echo ERROR: Failed to copy uninstaller executable
+) else (
+    echo ✓ Uninstaller executable copied
+)
+
+REM Copy uninstaller dependencies
+for %%f in (PrintHero.Uninstaller\bin\Release\net8.0-windows\*.dll) do (
+    copy "%%f" "PrintHero-Client-Package\Uninstaller\" >nul
+)
+echo ✓ Uninstaller dependencies copied
+
+REM Create uninstaller README
+echo Creating uninstaller documentation...
+(
+echo PrintHero Uninstaller
+echo ====================
+echo.
+echo This folder contains the PrintHero uninstaller utility.
+echo.
+echo To completely remove PrintHero from your system:
+echo 1. Close PrintHero if it's running
+echo 2. Right-click PrintHero.Uninstaller.exe and select "Run as Administrator"
+echo 3. Follow the uninstaller prompts
+echo.
+echo The uninstaller will:
+echo - Stop and remove the PrintHero service
+echo - Remove all installed files
+echo - Remove registry entries
+echo - Remove desktop and start menu shortcuts
+echo - Remove auto-startup entries
+echo.
+echo Note: User configuration files may be preserved for future installations.
+echo.
+echo Built on: %DATE% at %TIME%
+echo.
+) > "PrintHero-Client-Package\Uninstaller\README.txt"
+echo ✓ Uninstaller README created
+
+echo.
 echo =====================================================
-echo ✓ Client Package Updated Successfully!
+echo ✓ Complete Package Created Successfully!
 echo =====================================================
 echo Package Location: PrintHero-Client-Package\
-echo Installer: PrintHero-Client-Package\PrintHeroSetup.msi
+echo Main Installer: PrintHero-Client-Package\PrintHeroSetup.msi
+echo Uninstaller: PrintHero-Client-Package\Uninstaller\PrintHero.Uninstaller.exe
 echo.
 
 :end

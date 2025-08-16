@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PrintHero.UI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+95cd03255a68e76b0d7f9e71118599c3e9522d72")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2849103fa97e3a23e72892295505f893c2d46202")]
 [assembly: System.Reflection.AssemblyProductAttribute("PrintHero.UI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PrintHero")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

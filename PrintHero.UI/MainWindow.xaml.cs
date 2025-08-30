@@ -137,6 +137,7 @@ public partial class MainWindow : Window
                 _viewModel.NotifyPropertyChanged(nameof(_viewModel.FirstMonitoredFolder));
                 _viewModel.NotifyPropertyChanged(nameof(_viewModel.FilesProcessedToday));
                 _viewModel.NotifyPropertyChanged(nameof(_viewModel.PrintingErrorsToday));
+                _viewModel.NotifyPropertyChanged(nameof(_viewModel.TotalPrinting));
 
             }
         }
@@ -394,6 +395,66 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OpenHotFolder_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // Get the print job from the button's DataContext
+            var button = sender as System.Windows.Controls.Button;
+            var printJob = button?.DataContext as PrintHero.Core.Models.PrintJobConfiguration;
+            
+            if (printJob == null)
+            {
+                // Try to get from parent container if button DataContext is null
+                var parent = System.Windows.Media.VisualTreeHelper.GetParent(button);
+                while (parent != null && printJob == null)
+                {
+                    if (parent is FrameworkElement fe && fe.DataContext is PrintHero.Core.Models.PrintJobConfiguration pj)
+                    {
+                        printJob = pj;
+                        break;
+                    }
+                    parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
+                }
+                
+                if (printJob == null)
+                {
+                    MessageBox.Show("Could not find print job data.", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+            
+            if (string.IsNullOrEmpty(printJob.HotFolderPath))
+            {
+                MessageBox.Show("No hot folder path configured for this job.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            
+            if (System.IO.Directory.Exists(printJob.HotFolderPath))
+            {
+                // Open folder in Windows Explorer
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = printJob.HotFolderPath,
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                MessageBox.Show($"Hot folder does not exist:\n{printJob.HotFolderPath}", 
+                    "Folder Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to open hot folder");
+            MessageBox.Show($"Failed to open folder: {ex.Message}", "Error",
+                          MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
     private async void RemovePrintJob_Click(object sender, RoutedEventArgs e)
     {
         try
@@ -405,13 +466,30 @@ public partial class MainWindow : Window
                 return;
             }
 
-            // Get the selected print job from the DataGrid
-            var selectedPrintJob = PrintJobsGrid.SelectedItem as PrintHero.Core.Models.PrintJobConfiguration;
+            // Get the print job from the button's DataContext
+            var button = sender as System.Windows.Controls.Button;
+            var selectedPrintJob = button?.DataContext as PrintHero.Core.Models.PrintJobConfiguration;
+            
             if (selectedPrintJob == null)
             {
-                MessageBox.Show("Please select a print job to remove.", "No Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                // Try to get from parent container if button DataContext is null
+                var parent = System.Windows.Media.VisualTreeHelper.GetParent(button);
+                while (parent != null && selectedPrintJob == null)
+                {
+                    if (parent is FrameworkElement fe && fe.DataContext is PrintHero.Core.Models.PrintJobConfiguration pj)
+                    {
+                        selectedPrintJob = pj;
+                        break;
+                    }
+                    parent = System.Windows.Media.VisualTreeHelper.GetParent(parent);
+                }
+                
+                if (selectedPrintJob == null)
+                {
+                    MessageBox.Show("Could not find print job to remove.", "Error",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
             }
 
             // Confirm deletion
@@ -723,5 +801,6 @@ public partial class MainWindow : Window
                 System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
     }
+
 
 }

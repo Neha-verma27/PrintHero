@@ -103,6 +103,7 @@ namespace PrintHero.UI.ViewModels
                 {
                     _filesProcessedToday = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalPrinting)); // Update total when files processed change
                 }
             }
         }
@@ -116,8 +117,14 @@ namespace PrintHero.UI.ViewModels
                 {
                     _printingErrorsToday = value;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(TotalPrinting)); // Update total when errors change
                 }
             }
+        }
+
+        public int TotalPrinting
+        {
+            get => FilesProcessedToday + PrintingErrorsToday;
         }
         public string? DefaultPrinter
         {
@@ -642,6 +649,7 @@ namespace PrintHero.UI.ViewModels
             OnPropertyChanged(nameof(FirstMonitoredFolder));
             OnPropertyChanged(nameof(FilesProcessedToday));
             OnPropertyChanged(nameof(PrintingErrorsToday));
+            OnPropertyChanged(nameof(TotalPrinting));
         }
 
 
